@@ -24,10 +24,11 @@ interface ExtendedFile extends File {
 }
 
 function Home(): React.ReactElement {
-  const [counter, setCounter] = useState<number>(0);
+  const [counter, setCounter] = useState<number>(10);
 
   const [dragging, setDragging] = useState<boolean>(false);
-  const [files, setFiles] = useRefState<ProcessedFile[]>([]);
+  const [files, setFiles] = useState<ProcessedFile[]>([]);
+  const [filesReady, setFilesReady] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [socketClient, setSocketClient] = useRefState<Socket>({} as Socket);
 
@@ -37,14 +38,15 @@ function Home(): React.ReactElement {
       if (Array.isArray(sharedFiles) && sharedFiles.length > 0) {
         setFiles(sharedFiles);
       }
+      setFilesReady(true);
     },
     [],
   );
 
   const handlePlayNext = useCallback(
     async (): Promise<null | void> => {
-      console.log('seeding new file...', files?.current[counter]);
-      const magnetLink = await global.electron.seedFile(files?.current[counter]);
+      console.log('seeding new file...', files[counter]);
+      const magnetLink = await global.electron.seedFile(files[counter]);
       if (!magnetLink) {
         // TODO: error handling
         return null;
@@ -63,39 +65,44 @@ function Home(): React.ReactElement {
         );
       }
 
-      return setCounter((state) => (state >= files?.current?.length && 0) || state + 1);
+      return setCounter((state) => (state >= files.length && 0) || state + 1);
     },
     [files],
   );
 
   useEffect(
     () => {
-      const connection: Socket = io(
-        WEBSOCKETS_URL,
-        {
-          autoConnect: true,
-          // query: {
-          //   token,
-          // },
-          reconnection: true,
-          reconnectionAttempts: 10,
-          reconnectionDelay: 1000,
-          reconnectionDelayMax: 10000,
-        },
-      );
+      if (filesReady) {
+        const connection: Socket = io(
+          WEBSOCKETS_URL,
+          {
+            autoConnect: true,
+            // query: {
+            //   token,
+            // },
+            reconnection: true,
+            reconnectionAttempts: 10,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 10000,
+          },
+        );
+        setSocketClient(connection);
 
-      setSocketClient(connection);
+        connection.on('connect', () => log(`connected ${connection.id}`));
 
-      connection.on('connect', () => log(`connected ${connection.id}`));
+        connection.on(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
 
-      connection.on(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
+        return () => {
+          if (filesReady && connection) {
+            connection.off(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
+            connection.close();
+          }
+        };
+      }
 
-      return () => {
-        connection.off(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
-        connection.close();
-      };
+      return () => null;
     },
-    [],
+    [filesReady],
   );
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => event.preventDefault();
@@ -137,7 +144,7 @@ function Home(): React.ReactElement {
       </h1>
       <DropZone
         dragging={dragging}
-        files={files?.current}
+        files={files}
         handleDragging={setDragging}
         handleDragOver={handleDragOver}
         handleDrop={handleDrop}
