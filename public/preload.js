@@ -2,6 +2,7 @@
 const { contextBridge } = require('electron');
 const fs = require('fs').promises;
 const mimeTypes = require('mime-types');
+const WebTorrent = require('webtorrent-hybrid');
 
 // Allowed file extensions
 const allowedExtensions = [
@@ -12,6 +13,9 @@ const allowedExtensions = [
 
 // Custom error message as a return value for the recursive parser
 const errorMessage = 'error';
+
+// Create a torrent server
+const TorrentServer = new WebTorrent();
 
 /**
  * Get file name
@@ -166,6 +170,35 @@ process.once(
             return results;
           } catch {
             return errorMessage;
+          }
+        },
+        /**
+         * Seed selected file
+         * @param {object} file - file object
+         * @returns {null | string}
+         */
+        async seedFile(file) {
+          const { path = '' } = file;
+          if (!path) {
+            return null;
+          }
+
+          try {
+            const seedingPromise = new Promise(
+              (resolve) => TorrentServer.seed(
+                file.path,
+                (torrent) => {
+                  const link = torrent.magnetURI;
+
+                  // TODO: aslo return the torrent object
+                  return resolve(link);
+                },
+              ),
+            );
+            const resolvedLink = await seedingPromise;
+            return resolvedLink;
+          } catch {
+            return null;
           }
         },
       },

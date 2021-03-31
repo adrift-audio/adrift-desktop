@@ -23,7 +23,7 @@ function Home(): React.ReactElement {
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(
-    () => {
+    (): void => {
       const sharedFiles = getData<ProcessedFile[]>('files');
       if (Array.isArray(sharedFiles) && sharedFiles.length > 0) {
         setFiles(sharedFiles);
@@ -31,6 +31,10 @@ function Home(): React.ReactElement {
     },
     [],
   );
+
+  const handlePlay = () => {
+
+  };
 
   useEffect(
     () => {
@@ -52,7 +56,10 @@ function Home(): React.ReactElement {
 
       connection.on('connect', () => log(`connected ${connection.id}`));
 
+      connection.on('PLAY', handlePlay);
+
       return () => {
+        connection.off('PLAY', handlePlay);
         connection.close();
       };
     },
