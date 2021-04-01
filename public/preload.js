@@ -78,21 +78,20 @@ process.once(
     contextBridge.exposeInMainWorld(
       'electron',
       {
-        // TODO: recursive scan of all of the dropped elements
         /**
-         * Determine if provided path points to the directory or file
-         * @param {string} path - full path to the directory or file 
+         * Handle file adding
+         * @param {string[]} paths - paths to the dropped files
          * @returns {*[]}
          */
-        async handleFileAdding(files = []) {
-          if (!(Array.isArray(files) && files.length > 0)) {
+        async handleFileAdding(paths = []) {
+          if (!(Array.isArray(paths) && paths.length > 0)) {
             return [];
           }
 
           try {
             const results = [];
 
-            const filtered = files.filter((item) => item.path);
+            const filtered = paths.filter((item) => item.path);
             const stats = await Promise.all(filtered.map((item) => fs.stat(item.path)));
 
             const directories = stats.reduce(
