@@ -7,14 +7,14 @@ import log from '../../utilities/log';
 import { WEBSOCKETS_URL } from '../../configuration';
 import './Home.scss';
 
+const global = window as any;
+
 interface ExtendedFile extends File {
   path: string;
 }
 
 function Home(): React.ReactElement {
   // const [socketClient, setSocketClient] = useRefState<Socket>({} as Socket);
-
-  const global = window as any;
   const [dragging, setDragging] = useState<boolean>(false);
 
   useEffect(
@@ -52,11 +52,18 @@ function Home(): React.ReactElement {
 
     setDragging(false);
 
-    const files = Object.values(event.dataTransfer.files);
-    const file = files[0] as ExtendedFile;
-    const result = await global.electron.checkPath(file.path);
+    const items = Object.values(event.dataTransfer.files) as ExtendedFile[];
+    const files = await global.electron.handleFileAdding(
+      items.map((item: ExtendedFile) => ({
+        lastModified: item.lastModified,
+        name: item.name,
+        path: item.path,
+        size: item.size,
+        type: item.type,
+      })),
+    );
 
-    console.log(result);
+    return console.log(files);
   };
 
   return (
