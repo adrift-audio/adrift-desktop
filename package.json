@@ -45,6 +45,10 @@
     "type": "git",
     "url": "git+https://github.com/adrift-audio/adrift-desktop"
   },
+  "keywords": [
+    "Adrift"
+  ],
+  "license": "MIT",
   "dependencies": {
     "axios": "^0.21.1",
     "node-sass": "^5.0.0",
