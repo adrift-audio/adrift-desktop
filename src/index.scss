@@ -1,5 +1,17 @@
+:root {
+  --accent1: #391e22;
+  --accent2: #56373c;
+  --accent3: #9f807d;
+  --accent4: #d0b0b1;
+  --accent5: #e6d1d8;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+html, body {
+  background-color: var(--accent5);
 }
