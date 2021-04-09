@@ -1,31 +1,40 @@
 import React, { memo } from 'react';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 
-import Routes from './constants';
+import DarkWave from './assets/wave-dark.svg';
 import SignIn from './pages/SignIn';
 import './App.scss';
 
 function App(): React.ReactElement {
   return (
-    <Router>
-      <Switch>
-        <Route
-          component={() => (
-            <div className="App">
-              <header className="App-header">
-                ADRIFT
+    <div className="flex direction-column justify-content-start app-wrap">
+      <Router>
+        <Switch>
+          <Route
+            component={() => (
+              <header className="app-title noselect">
+                <div className="title">
+                  ADRIFT
+                </div>
+                <div className="wave-logo noselect">
+                  <img
+                    alt="Adrift"
+                    className="wave-logo noselect"
+                    src={DarkWave}
+                  />
+                </div>
               </header>
-            </div>
-          )}
-          exact
-          path="/"
-        />
-        <Route
-          component={SignIn}
-          path={Routes.signIn}
-        />
-      </Switch>
-    </Router>
+            )}
+            exact
+            path="/"
+          />
+          <Route
+            component={SignIn}
+            path="/sign-in"
+          />
+        </Switch>
+      </Router>
+    </div>
   );
 }
 

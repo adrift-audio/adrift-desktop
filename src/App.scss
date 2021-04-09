@@ -1,15 +1,26 @@
-.App {
-  text-align: center;
+.app-wrap {
+  min-height: 100vh;
 }
 
-.App-header {
-  min-height: 100vh;
+.app-title {
   display: flex;
   flex-direction: column;
   align-items: center;
+  min-height: 100vh;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  letter-spacing: 6px;
-  background-color: var(--accent5);
-  color: var(--accent1);
+  background-color: var(--accent7);
+  .title {
+    color: var(--accent1);
+    background: linear-gradient(90deg, var(--accent3) 25%,  var(--accent4) 50%, var(--accent5));
+    background-clip: text;
+    font-size: 32px;
+    font-weight: bold;
+    letter-spacing: 8px;
+    margin-bottom: 32px;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .wave-logo {
+    width: 64px;
+  }
 }
