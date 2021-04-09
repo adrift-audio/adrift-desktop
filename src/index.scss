@@ -7,7 +7,12 @@
   --accent6: #B7D9E2;
   --accent7: #F0FCFE;
   --app-background: white;
+  --app-text: #021624;
   --error: #860C2C;
+  --muted-background: #e2e2e2;
+  --muted-text: #9a9a9a;
+  --spacer: 16px;
+  --spacer-half: 8px;
   --success: #0C7640;
 }
 
@@ -21,6 +26,12 @@
 
 html, body {
   background-color: var(--app-background);
+  color: var(--app-text);
+}
+
+h1 {
+  color: var(--accent1);
+  letter-spacing: var(--spacer-half);
 }
 
 /* Prevent images drag */
@@ -52,4 +63,16 @@ img {
 }
 .justify-content-start {
   justify-content: flex-start;
+}
+.mt-16 {
+  margin-top: var(--spacer);
+}
+.text-center {
+  text-align: center;
+}
+
+.auth-wrap {
+  height: 100vh;
+  margin: 0 auto;
+  width: 400px;
 }
