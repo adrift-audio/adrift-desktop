@@ -1,0 +1,5 @@
+.form-error {
+  color: var(--error);
+  font-size: calc(var(--spacer) - 2px);
+  height: calc(var(--spacer) * 2);
+}
