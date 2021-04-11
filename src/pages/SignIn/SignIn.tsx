@@ -1,11 +1,9 @@
 import React, { memo, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 
-import ButtonTypes from '../../@types/buttons';
 import { ERROR_MESSAGES } from '../../constants';
-import { InputStatuses, InputTypes } from '../../@types/inputs';
-import StyledButton from '../../components/StyledButton';
-import StyledInput from '../../components/StyledInput';
+import { InputStatuses } from '../../@types/inputs';
+import SignInForm from './components/SignInForm';
 import './SignIn.scss';
 
 interface Data<T> {
@@ -21,6 +19,7 @@ function SignIn(): React.ReactElement {
     password: '',
   });
   const [formError, setFormError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [statuses, setStatuses] = useState<Data<string>>({
     email: InputStatuses.idle as string,
     password: InputStatuses.idle as string,
@@ -51,6 +50,7 @@ function SignIn(): React.ReactElement {
       }));
     }
 
+    setIsLoading(true);
     setStatuses({
       email: InputStatuses.success,
       password: InputStatuses.success,
@@ -62,41 +62,21 @@ function SignIn(): React.ReactElement {
   };
 
   return (
-    <form
-      className="flex direction-column justify-content-center auth-wrap"
-      onSubmit={handleSubmit}
-    >
+    <div className="flex direction-column justify-content-center auth-wrap">
       <h1 className="text-center noselect">
         SIGN IN
       </h1>
-      <StyledInput
-        classes={['mt-16']}
-        name="email"
-        onChange={handleChange}
-        placeholder="Email"
-        status={statuses.email}
-        type={InputTypes.email}
-        value={data.email}
+      <SignInForm
+        email={data.email}
+        emailStatus={statuses.email}
+        formError={formError}
+        handleChange={handleChange}
+        handleSubmit={handleSubmit}
+        isLoading={isLoading}
+        password={data.password}
+        passwordStatus={statuses.password}
       />
-      <StyledInput
-        classes={['mt-16']}
-        name="password"
-        onChange={handleChange}
-        placeholder="Password"
-        status={statuses.password}
-        type={InputTypes.password}
-        value={data.password}
-      />
-      <div className="form-error mt-16 text-center noselect">
-        { formError }
-      </div>
-      <StyledButton
-        classes={['mt-16']}
-        type={ButtonTypes.submit}
-      >
-        SUBMIT
-      </StyledButton>
-    </form>
+    </div>
   );
 }
 
