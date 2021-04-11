@@ -58,7 +58,8 @@ function SignIn(): React.ReactElement {
 
     // TODO: get token
 
-    return router.replace('/home');
+    // TODO: use replace instead of push
+    return router.push('/home');
   };
 
   return (

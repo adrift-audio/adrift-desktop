@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 
 import DarkWave from './assets/wave-dark.svg';
+import Home from './pages/Home';
 import SignIn from './pages/SignIn';
 import './App.scss';
 
@@ -27,6 +28,10 @@ function App(): React.ReactElement {
             )}
             exact
             path="/"
+          />
+          <Route
+            component={Home}
+            path="/home"
           />
           <Route
             component={SignIn}
