@@ -1,0 +1,12 @@
+.drop-zone {
+  background-color: var(--app-background);
+  border: 2px dashed var(--accent3);
+  height: 400px;
+  margin: 0 auto;
+  width: 400px;
+  transition: background-color 160ms ease-in;
+}
+.dragging {
+  background-color: var(--accent6);
+  transition: background-color 160ms ease-out;
+}

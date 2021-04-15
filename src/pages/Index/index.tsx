@@ -23,12 +23,13 @@ function Index(): React.ReactElement {
     },
     [router],
   );
+
   return (
     <div className="app-title noselect">
       <div className="title">
         ADRIFT
       </div>
-      <div className="wave-logo noselect">
+      <div className="wave-logo">
         <img
           alt="Adrift"
           className="wave-logo noselect"
