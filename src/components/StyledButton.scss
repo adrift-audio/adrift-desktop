@@ -11,5 +11,9 @@
 }
 .styled-button:hover {
   background-color: var(--accent3);
+  transition: background-color 160ms ease-in;
+}
+.styled-button:disabled {
+  background-color: var(--accent5);
   transition: background-color 160ms ease-out;
 }

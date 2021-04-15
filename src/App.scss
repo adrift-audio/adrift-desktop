@@ -1,36 +1,3 @@
 .app-wrap {
   min-height: 100vh;
 }
-
-@keyframes fade-in {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-.app-title {
-  animation: fade-in 0.5s linear;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
-  justify-content: center;
-  background-color: var(--accent7);
-  .title {
-    color: var(--accent1);
-    background: linear-gradient(90deg, var(--accent3) 25%,  var(--accent4) 50%, var(--accent5));
-    background-clip: text;
-    font-size: 32px;
-    font-weight: bold;
-    letter-spacing: 8px;
-    margin-bottom: 32px;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  .wave-logo {
-    width: 64px;
-  }
-}

@@ -59,7 +59,6 @@ function SignInForm(props: SignInFormProps): React.ReactElement {
       </div>
       <StyledButton
         disabled={isLoading}
-        classes={['mt-16']}
         type={ButtonTypes.submit}
       >
         SUBMIT
