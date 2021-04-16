@@ -13,6 +13,7 @@ process.once(
     contextBridge.exposeInMainWorld(
       'electron',
       {
+        // TODO: recursive scan of all of the dropped elements
         /**
          * Determine if provided path points to the directory or file
          * @param {string} path - full path to the directory or file 
