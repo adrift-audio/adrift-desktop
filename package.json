@@ -2,11 +2,48 @@
   "name": "adrift-desktop",
   "version": "1.0.0",
   "private": true,
+  "description": "Adrift desktop application",
+  "author": {
+    "name": "Peter Dyumin",
+    "url": "https://github.com/peterdee"
+  },
   "scripts": {
     "build": "react-scripts build",
+    "dev:dev": "cross-env ELECTRON_ENV=development concurrently \"yarn start\" \"wait-on http://localhost:3000 && electron .\"",
     "eject": "react-scripts eject",
     "lint": "eslint",
     "start": "react-scripts start"
+  },
+  "homepage": "./",
+  "main": "./public/electron.js",
+  "build": {
+    "appId": "com.adrift.desktop",
+    "copyright": "Adrift © 2021",
+    "directories": {
+      "buildResources": "./assets",
+      "output": "./binaries"
+    },
+    "files": [
+      "./build/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.education",
+      "icon": "./assets/icon.icns",
+      "target": "dmg"
+    },
+    "productName": "Adrift",
+    "win": {
+      "icon": "./assets/icon.png",
+      "target": "msi"
+    }
+  },
+  "engines": {
+    "node": "~14.16.1",
+    "npm": "~7.10.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adrift-audio/adrift-desktop"
   },
   "dependencies": {
     "axios": "^0.21.1",
@@ -25,12 +62,17 @@
     "@types/react-router-dom": "^5.1.7",
     "@typescript-eslint/eslint-plugin": "^4.21.0",
     "@typescript-eslint/parser": "^4.21.0",
+    "concurrently": "^6.0.2",
+    "cross-env": "^7.0.3",
+    "electron": "^12.0.4",
+    "electron-builder": "^22.10.5",
     "eslint": "^7.23.0",
     "eslint-config-airbnb": "^18.2.1",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-jsx-a11y": "^6.4.1",
     "eslint-plugin-react": "^7.23.1",
-    "eslint-plugin-react-hooks": "^4.2.0"
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "wait-on": "^5.3.0"
   },
   "eslintConfig": {
     "extends": [

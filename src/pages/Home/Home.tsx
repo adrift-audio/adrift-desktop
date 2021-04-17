@@ -1,14 +1,20 @@
 import React, { memo, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
+import DropZone from './components/DropZone';
 import log from '../../utilities/log';
 // import useRefState from '../../hooks/use-ref-state';
 import { WEBSOCKETS_URL } from '../../configuration';
 import './Home.scss';
 
+interface ExtendedFile extends File {
+  path: string;
+}
+
 function Home(): React.ReactElement {
   // const [socketClient, setSocketClient] = useRefState<Socket>({} as Socket);
 
+  const global = window as any;
   const [dragging, setDragging] = useState<boolean>(false);
 
   useEffect(
@@ -40,13 +46,17 @@ function Home(): React.ReactElement {
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => event.preventDefault();
 
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = async (event: React.DragEvent<HTMLDivElement>): Promise<void> => {
     event.stopPropagation();
     event.preventDefault();
 
     setDragging(false);
 
-    return console.log('dropped', event);
+    const files = Object.values(event.dataTransfer.files);
+    const file = files[0] as ExtendedFile;
+    const result = await global.electron.checkPath(file.path);
+
+    console.log(result);
   };
 
   return (
@@ -54,15 +64,12 @@ function Home(): React.ReactElement {
       <h1>
         Home
       </h1>
-      <div
-        className={`flex mt-16 drop-zone ${dragging ? 'dragging' : ''}`}
-        onDragEnter={() => setDragging(true)}
-        onDragLeave={() => setDragging(false)}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-      >
-        Drop zone
-      </div>
+      <DropZone
+        dragging={dragging}
+        handleDragging={setDragging}
+        handleDragOver={handleDragOver}
+        handleDrop={handleDrop}
+      />
     </>
   );
 }
