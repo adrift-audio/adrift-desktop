@@ -35,7 +35,7 @@ const getFileExtension = (path = '') => {
 const parseDirectoriesRecursively = async (directories = [], results = []) => {
   try {
     if (!(Array.isArray(directories) && directories.length > 0)) {
-      return [];
+      return results;
     }
 
     const [target, ...rest] = directories;
@@ -47,7 +47,25 @@ const parseDirectoriesRecursively = async (directories = [], results = []) => {
     const stats = await Promise.all(contents.map((item) => fs.stat(`${target.path}/${item}`)));
 
     // TODO: finish this
+    const files = [];
+    const updatedDirectories = stats.reduce(
+      (array, item) => {
+        if (item.isFile()) {
+          // push file paths
+        }
+        if (item.isDirectory()) {
+          // push directory path;
+          array.push(item);
+        }
+        return array;
+      },
+      [],
+    );
 
+    return parseDirectoriesRecursively(
+      [...rest, ...updatedDirectories],
+      [...results, files],
+    );
   } catch {
     // TODO: figure out what to return in case of an error
     return [];
