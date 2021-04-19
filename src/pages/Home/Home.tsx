@@ -54,10 +54,16 @@ function Home(): React.ReactElement {
 
     const items = Object.values(event.dataTransfer.files) as ExtendedFile[];
     const files = await global.electron.handleFileAdding(
-      items.map((item: ExtendedFile) => ({ path: item.path })),
+      items.map((item: ExtendedFile) => ({
+        added: Date.now(),
+        name: item.name,
+        path: item.path,
+        size: item.size,
+        type: item.type,
+      })),
     );
 
-    return console.log(files);
+    return console.log('in the end', files);
   };
 
   return (

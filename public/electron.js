@@ -1,8 +1,12 @@
+/* eslint-disable */
+require('electron-reloader')(module);
 const {
   app,
   BrowserWindow,
   globalShortcut,
 } = require('electron');
+
+/* eslint-enable */
 const path = require('path');
 
 const { ELECTRON_ENV = 'development' } = process.env;
@@ -11,7 +15,7 @@ let mainWindow;
 async function createWindow() {
   mainWindow = new BrowserWindow({
     backgroundColor: '#fff',
-    height: 640,
+    height: ELECTRON_ENV === 'development' ? 900 : 640,
     resizable: false,
     webPreferences: {
       contextIsolation: true,
@@ -19,7 +23,7 @@ async function createWindow() {
       nodeIntegration: false,
       preload: path.join(__dirname, './preload.js'),
     },
-    width: ELECTRON_ENV === 'development' ? 880 : 480,
+    width: ELECTRON_ENV === 'development' ? 1440 : 480,
   });
 
   if (ELECTRON_ENV === 'development') {
@@ -33,8 +37,10 @@ async function createWindow() {
       : 'http://localhost:3000',
   );
 
-  globalShortcut.register('CommandOrControl+R', () => null);
-  globalShortcut.register('F5', () => null);
+  if (ELECTRON_ENV !== 'development') {
+    globalShortcut.register('CommandOrControl+R', () => null);
+    globalShortcut.register('F5', () => null);
+  }
 
   mainWindow.on('closed', () => {
     mainWindow = null;
