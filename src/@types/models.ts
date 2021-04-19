@@ -1,3 +1,11 @@
+export interface ProcessedFile {
+  added: number;
+  name: string;
+  path: string;
+  size: number;
+  type: string;
+}
+
 export enum Roles {
   admin = 'admin',
   user = 'user',
