@@ -1,12 +1,19 @@
-import React, { memo, useEffect, useState } from 'react';
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 import { io, Socket } from 'socket.io-client';
 
 import combineLists from '../../utilities/combine-lists';
 import DropZone from './components/DropZone';
+import encodeLink from '../../utilities/encode-link';
 import { getData, storeData } from '../../utilities/data-service';
 import log from '../../utilities/log';
-// import useRefState from '../../hooks/use-ref-state';
+import useRefState from '../../hooks/use-ref-state';
 import { ProcessedFile } from '../../@types/models';
+import { SOCKET_EVENTS } from '../../constants';
 import { WEBSOCKETS_URL } from '../../configuration';
 import './Home.scss';
 
@@ -17,10 +24,12 @@ interface ExtendedFile extends File {
 }
 
 function Home(): React.ReactElement {
-  // const [socketClient, setSocketClient] = useRefState<Socket>({} as Socket);
+  const [counter, setCounter] = useState<number>(0);
+
   const [dragging, setDragging] = useState<boolean>(false);
-  const [files, setFiles] = useState<ProcessedFile[]>([]);
+  const [files, setFiles] = useRefState<ProcessedFile[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [socketClient, setSocketClient] = useRefState<Socket>({} as Socket);
 
   useEffect(
     (): void => {
@@ -32,9 +41,32 @@ function Home(): React.ReactElement {
     [],
   );
 
-  const handlePlay = () => {
+  const handlePlayNext = useCallback(
+    async (): Promise<null | void> => {
+      console.log('seeding new file...', files?.current[counter]);
+      const magnetLink = await global.electron.seedFile(files?.current[counter]);
+      if (!magnetLink) {
+        // TODO: error handling
+        return null;
+      }
 
-  };
+      log(`magnet: ${magnetLink}`);
+
+      const encoded = encodeLink(magnetLink);
+      if (socketClient?.current?.connected) {
+        socketClient.current.emit(
+          SOCKET_EVENTS.SWITCH_TRACK,
+          {
+            link: encoded,
+            track: files[counter],
+          },
+        );
+      }
+
+      return setCounter((state) => (state >= files?.current?.length && 0) || state + 1);
+    },
+    [files],
+  );
 
   useEffect(
     () => {
@@ -52,14 +84,14 @@ function Home(): React.ReactElement {
         },
       );
 
-      // setSocketClient(connection);
+      setSocketClient(connection);
 
       connection.on('connect', () => log(`connected ${connection.id}`));
 
-      connection.on('PLAY', handlePlay);
+      connection.on(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
 
       return () => {
-        connection.off('PLAY', handlePlay);
+        connection.off(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
         connection.close();
       };
     },
@@ -105,7 +137,7 @@ function Home(): React.ReactElement {
       </h1>
       <DropZone
         dragging={dragging}
-        files={files}
+        files={files?.current}
         handleDragging={setDragging}
         handleDragOver={handleDragOver}
         handleDrop={handleDrop}

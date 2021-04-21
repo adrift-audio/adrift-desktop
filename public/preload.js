@@ -187,12 +187,7 @@ process.once(
             const seedingPromise = new Promise(
               (resolve) => TorrentServer.seed(
                 file.path,
-                (torrent) => {
-                  const link = torrent.magnetURI;
-
-                  // TODO: aslo return the torrent object
-                  return resolve(link);
-                },
+                (torrent) => resolve(torrent.magnetURI),
               ),
             );
             const resolvedLink = await seedingPromise;
