@@ -134,7 +134,7 @@ function SignIn(): React.ReactElement {
   const handleCreateAccount = () => router.push(`${WEB_URL}/sign-up`);
 
   return (
-    <div className="flex direction-column justify-content-center auth-wrap">
+    <div className="flex direction-column justify-content-center auth-wrap fade-in">
       <h1 className="text-center noselect">
         SIGN IN
       </h1>

@@ -1,20 +1,29 @@
-@keyframes fade-in {
+@keyframes index {
   0% {
     opacity: 0;
   }
-  100% {
+  10% {
     opacity: 1;
+  }
+  25% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
   }
 }
 
 .app-title {
-  animation: fade-in 0.5s linear;
+  animation: index 5s linear;
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
   justify-content: center;
-  background-color: var(--accent7);
+  background-color: var(--app-background);
   .title {
     color: var(--accent1);
     background: linear-gradient(90deg, var(--accent3) 25%,  var(--accent4) 50%, var(--accent5));

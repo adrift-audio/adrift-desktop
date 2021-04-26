@@ -138,7 +138,7 @@ function Home(): React.ReactElement {
   };
 
   return (
-    <>
+    <div className="flex direction-column fade-in">
       <h1>
         Home
       </h1>
@@ -150,7 +150,7 @@ function Home(): React.ReactElement {
         handleDrop={handleDrop}
         loading={loading}
       />
-    </>
+    </div>
   );
 }
 

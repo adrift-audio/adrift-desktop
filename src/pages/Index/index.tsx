@@ -16,7 +16,7 @@ function Index(): React.ReactElement {
       const user = getData<User>('user');
       const timer = setTimeout(
         () => router.replace(`/${token && user ? ROUTES.home : ROUTES.signIn}`),
-        2000,
+        2500,
       );
 
       return () => clearTimeout(timer);
