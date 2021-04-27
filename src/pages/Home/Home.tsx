@@ -138,7 +138,7 @@ function Home(): React.ReactElement {
   };
 
   return (
-    <div className="flex direction-column fade-in">
+    <div className="flex direction-column home fade-in">
       <h1>
         Home
       </h1>
