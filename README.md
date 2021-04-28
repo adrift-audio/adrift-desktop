@@ -4,4 +4,4 @@ Adrift desktop application
 
 ### License
 
-[MIT](LICENSE)
+[MIT](./LICENSE)
