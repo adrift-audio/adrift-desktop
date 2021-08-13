@@ -21,6 +21,8 @@ export const ROUTES = {
 } as const;
 
 export const SOCKET_EVENTS = {
+  CONNECT: 'connect',
+  DISCONNECT: 'disconnect',
   PLAY_NEXT: 'PLAY_NEXT',
   PLAY_PAUSE: 'PLAY_PAUSE',
   PLAY_PREVIOUS: 'PLAY_PREVIOUS',

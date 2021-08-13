@@ -4,7 +4,8 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { Socket } from 'socket.io-client';
+import { useHistory } from 'react-router-dom';
 
 import combineLists from '../../utilities/combine-lists';
 import DropZone from './components/DropZone';
@@ -13,8 +14,8 @@ import { getData, storeData } from '../../utilities/data-service';
 import log from '../../utilities/log';
 import useRefState from '../../hooks/use-ref-state';
 import { ProcessedFile } from '../../@types/models';
-import { SOCKET_EVENTS } from '../../constants';
-import { WEBSOCKETS_URL } from '../../configuration';
+import { ROUTES, SOCKET_EVENTS } from '../../constants';
+import connect from '../../utilities/socket-connection';
 import './Home.scss';
 
 const global = window as any;
@@ -31,6 +32,21 @@ function Home(): React.ReactElement {
   const [filesReady, setFilesReady] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [socketClient, setSocketClient] = useRefState<Socket>({} as Socket);
+  const [token, setToken] = useState<string>('');
+
+  const router = useHistory();
+
+  // get token
+  useEffect(
+    (): void => {
+      const existingToken = getData<string>('token');
+      if (!existingToken) {
+        router.replace(ROUTES.signIn);
+      }
+      setToken(String(existingToken));
+    },
+    [],
+  );
 
   useEffect(
     (): void => {
@@ -72,35 +88,24 @@ function Home(): React.ReactElement {
 
   useEffect(
     () => {
-      if (filesReady) {
-        const connection: Socket = io(
-          WEBSOCKETS_URL,
-          {
-            autoConnect: true,
-            // query: {
-            //   token,
-            // },
-            reconnection: true,
-            reconnectionAttempts: 10,
-            reconnectionDelay: 1000,
-            reconnectionDelayMax: 10000,
-          },
-        );
-        setSocketClient(connection);
+      const socketConnection = connect(token);
 
-        connection.on('connect', () => log(`connected ${connection.id}`));
+      socketConnection.on(
+        SOCKET_EVENTS.CONNECT,
+        (): void => {
+          log(`connected ${socketConnection.id}`);
+          setSocketClient(socketConnection);
+        },
+      );
 
-        connection.on(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
+      socketConnection.on(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
 
-        return () => {
-          if (filesReady && connection) {
-            connection.off(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
-            connection.close();
-          }
-        };
-      }
-
-      return () => null;
+      return () => {
+        if (filesReady && socketConnection) {
+          socketConnection.off(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
+          socketConnection.close();
+        }
+      };
     },
     [filesReady],
   );

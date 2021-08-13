@@ -1,6 +1,13 @@
 /**
+ * Delete data from LocalStorage
+ * @param {string} key - storage key
+ * @returns {void}
+ */
+export const deleteData = (key: string): void => localStorage.removeItem(key);
+
+/**
  * Get data from LocalStorage
- * @param key - storage key
+ * @param {string} key - storage key
  * @returns {null|*}
  */
 export const getData = <T>(key: string): T | null => {
@@ -21,7 +28,7 @@ export const getData = <T>(key: string): T | null => {
  * Store data in LocalStorage
  * @param {string} key - storage key
  * @param {*} value - value to store
- * @returns {null|*}
+ * @returns {null|void}
  */
 export const storeData = <T>(key: string, value: T): null | void => {
   try {
