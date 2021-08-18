@@ -68,8 +68,14 @@ img {
 .justify-content-center {
   justify-content: center;
 }
+.justify-content-end {
+  justify-content: flex-end;
+}
 .justify-content-start {
   justify-content: flex-start;
+}
+.mr-1 {
+  margin-right: var(--spacer);
 }
 .mt-16 {
   margin-top: var(--spacer);

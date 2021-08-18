@@ -1,27 +1,27 @@
 .home {
   height: 100vh;
   padding: var(--spacer);
-  .header {
+}
+.header {
+  height: calc(var(--spacer) * 2);
+  .header-icon-button {
+    background-color: var(--app-background);
+    border: none;
+    border-radius: 50%;
     height: calc(var(--spacer) * 2);
-    .header-icon-button {
-      background-color: var(--app-background);
-      border: none;
-      border-radius: 50%;
-      height: calc(var(--spacer) * 2);
-      outline: none;
-      transition: background-color 160ms ease-out;
-      width: calc(var(--spacer) * 2);
-      .header-icon {
-        height: calc((var(--spacer) * 2) - var(--spacer-quarter));
-        margin: 0 auto;
-        width: calc((var(--spacer) * 2) - var(--spacer-quarter));
-      }
+    outline: none;
+    transition: background-color 160ms ease-out;
+    width: calc(var(--spacer) * 2);
+    .header-icon {
+      height: calc((var(--spacer) * 2) - var(--spacer-quarter));
+      margin: 0 auto;
+      width: calc((var(--spacer) * 2) - var(--spacer-quarter));
     }
-    .header-icon-button:hover {
-      background-color: var(--accent6);
-      cursor: pointer;
-      transition: background-color 160ms ease-in;
-    }
+  }
+  .header-icon-button:hover {
+    background-color: var(--accent6);
+    cursor: pointer;
+    transition: background-color 160ms ease-in;
   }
 }
 .drop-zone {
@@ -52,4 +52,14 @@
 }
 .enable-events {
   pointer-events: auto;
+}
+.settings {
+  background-color: var(--app-background);
+  position: absolute;
+  height: calc(100vh - (var(--spacer) * 2));
+  width: calc(100% - (var(--spacer) * 2));
+  .settings-icon {
+    height: calc(var(--spacer) + var(--spacer-quarter));
+    width: calc(var(--spacer) + var(--spacer-quarter));
+  }
 }

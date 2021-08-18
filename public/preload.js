@@ -1,10 +1,10 @@
 /* eslint-disable-next-line */
 const { contextBridge } = require('electron');
+const cuid = require('cuid');
 const fs = require('fs').promises;
+const lz = require('lz-string');
 const mimeTypes = require('mime-types');
 const WebTorrent = require('webtorrent-hybrid');
-
-const lz = require('lz-string');
 
 // Allowed file extensions
 const allowedExtensions = [
@@ -103,6 +103,7 @@ const parseDirectoriesRecursively = async (paths = [], results = []) => {
 
           files.push({
             added: Date.now(),
+            id: cuid(),
             name,
             path,
             size: item.size,
@@ -179,6 +180,7 @@ process.once(
               }
             }
 
+            console.log(results);
             return results;
           } catch {
             return errorMessage;
@@ -207,16 +209,6 @@ process.once(
           } catch {
             return null;
           }
-        },
-        async getTorrent(path = '') {
-          const seedingPromise = new Promise(
-            (resolve) => TorrentServer.seed(
-              path,
-              (torrent) => resolve(torrent.torrentFile),
-            ),
-          );
-          const resolved = await seedingPromise;
-          return lz.compress(resolved.toString('hex'));
         },
       },
     );

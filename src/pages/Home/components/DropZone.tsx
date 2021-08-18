@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
 
+import ListItem from './ListItem';
 import { ProcessedFile } from '../../../@types/models';
 import '../Home.scss';
 
@@ -38,6 +39,8 @@ function DropZone(props: DropZoneProps): React.ReactElement {
     handleDragging(false);
   };
 
+  const handleContextClick = (id: string): void => console.log('clicked', id);
+
   return (
     <div
       className={`flex direction-column mt-16 drop-zone ${dragging ? 'dragging' : ''}`}
@@ -55,19 +58,13 @@ function DropZone(props: DropZoneProps): React.ReactElement {
         item: ProcessedFile,
         index: number,
       ): React.ReactElement => (
-        <button
-          className="flex list-item"
-          key={item.path}
-          onClick={() => console.log('clicked', item.name)}
-          type="button"
-        >
-          <span className="list-item-index">
-            { index + 1 }
-          </span>
-          <span>
-            { item.name }
-          </span>
-        </button>
+        <ListItem
+          handleContextClick={handleContextClick}
+          id={item.id}
+          index={index}
+          key={item.id}
+          name={item.name}
+        />
       )) }
     </div>
   );

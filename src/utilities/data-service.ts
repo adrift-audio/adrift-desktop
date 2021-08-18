@@ -40,3 +40,10 @@ export const storeData = <T>(key: string, value: T): null | void => {
     return null;
   }
 };
+
+// Store key names
+export const storeKeys = {
+  files: 'files',
+  token: 'token',
+  user: 'user',
+} as const;

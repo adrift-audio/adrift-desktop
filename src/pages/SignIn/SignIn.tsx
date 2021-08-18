@@ -13,7 +13,7 @@ import { InputStatuses } from '../../@types/inputs';
 import LinkButton from '../../components/LinkButton';
 import { SignInResponse } from '../../@types/apis';
 import SignInForm from './components/SignInForm';
-import { getData, storeData } from '../../utilities/data-service';
+import { getData, storeData, storeKeys } from '../../utilities/data-service';
 import { Token, User } from '../../@types/models';
 import './SignIn.scss';
 
@@ -98,8 +98,8 @@ function SignIn(): React.ReactElement {
         return setFormError(ERROR_MESSAGES.invalidServerResponse);
       }
 
-      storeData<Token>('token', token);
-      storeData<User>('user', user);
+      storeData<Token>(storeKeys.token, token);
+      storeData<User>(storeKeys.user, user);
 
       return router.replace(`/${ROUTES.home}`);
     } catch (error) {

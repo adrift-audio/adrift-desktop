@@ -1,10 +1,14 @@
 export interface ProcessedFile {
   added: number;
+  id: string;
   name: string;
   path: string;
   size: number;
+  torrent: string;
   type: string;
 }
+
+export type PreProcessedFile = Omit<ProcessedFile, 'id' | 'torrent'>;
 
 export enum Roles {
   admin = 'admin',
