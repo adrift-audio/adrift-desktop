@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 
 import ListItem from './ListItem';
+import Loader from '../../../components/Loader';
 import { ProcessedFile } from '../../../@types/models';
 import '../Home.scss';
 
@@ -27,15 +28,20 @@ function DropZone(props: DropZoneProps): React.ReactElement {
 
   return (
     <div
-      className={`flex direction-column mt-16 drop-zone ${dragging ? 'dragging' : ''}`}
+      className={`flex direction-column mt-16 drop-zone ${dragging ? 'dragging' : ''} noselect`}
       onDragEnter={(): void => handleDragging(true)}
       onDragLeave={(): void => handleDragging(false)}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
       { loading && (
-        <div>
-          Loading...
+        <div className="centered">
+          <Loader />
+        </div>
+      ) }
+      { files.length === 0 && !loading && !dragging && (
+        <div className="centered">
+          You have no shared files!
         </div>
       ) }
       { files.length > 0 && !loading && !dragging && files.map((

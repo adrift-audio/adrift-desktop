@@ -30,12 +30,16 @@
 .drop-zone {
   background-color: var(--app-background);
   border: 1px solid var(--accent1);
+  border-radius: var(--spacer-quarter);
   height: calc(100% - (var(--spacer) * 2));
   margin: 0 auto;
   overflow: scroll;
   padding: var(--spacer-quarter);
   transition: background-color 160ms ease-in;
   width: 100%;
+  .centered {
+    margin: auto auto;
+  }
   .list-item {
     background-color: transparent;
     border: none;
