@@ -3,7 +3,7 @@ const { contextBridge } = require('electron');
 
 const addFiles = require('./node/add-files');
 const fileLoader = require('./node/file-loader');
-const { seedFile } = require('./node/torrent-services');
+const { initialSeeding, seedFile } = require('./node/torrent-services');
 
 process.once(
   'loaded',
@@ -21,6 +21,17 @@ process.once(
             return [];
           }
           return addFiles(items);
+        },
+        /**
+         * Create the .torrent file and seed it
+         * @param {string} path - path to file
+         * @returns {Promise<string>}
+         */
+        async createTorrent(path = '') {
+          if (!path) {
+            return '';
+          }
+          return initialSeeding(path);
         },
         /**
          * Load file from the disk

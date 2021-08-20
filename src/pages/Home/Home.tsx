@@ -8,10 +8,9 @@ import axios from 'axios';
 import { Socket } from 'socket.io-client';
 import { useHistory } from 'react-router-dom';
 
-import Cog from '../../assets/cog.svg';
+import { BACKEND_URL } from '../../configuration';
 import combineLists from '../../utilities/combine-lists';
-import DarkWave from '../../assets/wave-dark.svg';
-import DropZone from './components/DropZone';
+import connect from '../../utilities/socket-connection';
 import encodeLink from '../../utilities/encode-link';
 import {
   deleteData,
@@ -19,19 +18,17 @@ import {
   storeData,
   storeKeys,
 } from '../../utilities/data-service';
-import log from '../../utilities/log';
-import useRefState from '../../hooks/use-ref-state';
 import {
   ExtendedFile,
   ProcessedFile,
   User,
 } from '../../@types/models';
-import { ROUTES, SOCKET_EVENTS } from '../../constants';
-import connect from '../../utilities/socket-connection';
-import SettingsModal from './components/SettingsModal';
-import './Home.scss';
-import { BACKEND_URL } from '../../configuration';
 import getDuration from '../../utilities/get-duration';
+import HomeLayout from './components/HomeLayout';
+import log from '../../utilities/log';
+import { ROUTES, SOCKET_EVENTS } from '../../constants';
+import useRefState from '../../hooks/use-ref-state';
+import './Home.scss';
 
 const global = window as any;
 
@@ -147,18 +144,37 @@ function Home(): React.ReactElement {
   const handleContextClick = (id: string): void => log(`clicked ${id}`);
 
   /**
-   * Handle drag over
-   * @param {React.DragEvent<HTMLDivElement>} event - drag event
-   * @returns {void}
+   * Add .torrent files recursively
+   * @param {ProcessedFile[]} fullList - list of all of the processed files
+   * @param {ProcessedFile[]} withoutTorrent - list of the items that were not processed yet
+   * @returns {Promise<void | null>}
    */
-  const handleDragOver = (
-    event: React.DragEvent<HTMLDivElement>,
-  ): void => event.preventDefault();
+  const addTorrents = async (
+    fullList: ProcessedFile[],
+    withoutTorrent: ProcessedFile[],
+  ): Promise<void | null> => {
+    if (withoutTorrent.length === 0) {
+      return storeData<ProcessedFile[]>(storeKeys.files, fullList);
+    }
+
+    const [item, ...rest] = withoutTorrent;
+    const torrent = await global.electron.createTorrent(item.path);
+    const updatedFullList = fullList.map((
+      file: ProcessedFile,
+    ): ProcessedFile => (file.id === item.id && ({
+      ...file,
+      torrent,
+      torrentCreated: true,
+    })) || file);
+
+    setFiles(updatedFullList);
+    return addTorrents(updatedFullList, rest);
+  };
 
   /**
    * Calculate durations of the tracks
    * @param {ProcessedFile[]} fullList - list of all of the processed files
-   * @param withoutDuration - list of the items that were not processed yet
+   * @param {ProcessedFile[]} withoutDuration - list of the items that were not processed yet
    * @returns {Promise<void | null>}
    */
   const calculateDurations = async (
@@ -166,21 +182,20 @@ function Home(): React.ReactElement {
     withoutDuration: ProcessedFile[],
   ): Promise<void | null> => {
     if (withoutDuration.length === 0) {
-      return storeData<ProcessedFile[]>(storeKeys.files, fullList);
+      storeData<ProcessedFile[]>(storeKeys.files, fullList);
+      const withoutTorrent = fullList.filter(({ torrentCreated }): boolean => !torrentCreated);
+      return addTorrents(fullList, withoutTorrent);
     }
 
     const [item, ...rest] = withoutDuration;
     const duration = await getDuration(item.path, item.type);
-    const updatedFullList = fullList.map((file: ProcessedFile): ProcessedFile => {
-      if (file.id === item.id) {
-        return {
-          ...file,
-          duration,
-          durationLoaded: true,
-        };
-      }
-      return file;
-    });
+    const updatedFullList = fullList.map((
+      file: ProcessedFile,
+    ): ProcessedFile => (file.id === item.id && ({
+      ...file,
+      duration,
+      durationLoaded: true,
+    })) || file);
 
     setFiles(updatedFullList);
     return calculateDurations(updatedFullList, rest);
@@ -240,54 +255,19 @@ function Home(): React.ReactElement {
   };
 
   return (
-    <div className="flex direction-column home fade-in">
-      { settingsModal && (
-        <SettingsModal
-          handleLogout={handleLogout}
-          handleRemoveAll={handleRemoveAll}
-          handleSettingsModal={handleSettingsModal}
-          user={user || null}
-        />
-      ) }
-      <div className="flex justify-content-between align-items-center header noselect">
-        <button
-          className="flex justify-content-between align-items-center header-icon-button"
-          type="button"
-        >
-          <img
-            alt="Adrift"
-            className="header-icon"
-            src={DarkWave}
-          />
-        </button>
-        <div className="flex align-items-center">
-          <span className="mr-1">
-            { !user && 'Loading...' }
-            { user && `${user.firstName} ${user.lastName}`}
-          </span>
-          <button
-            className="flex justify-content-between align-items-center header-icon-button"
-            onClick={handleSettingsModal}
-            type="button"
-          >
-            <img
-              alt="Settings"
-              className="header-icon"
-              src={Cog}
-            />
-          </button>
-        </div>
-      </div>
-      <DropZone
-        dragging={dragging}
-        files={files}
-        handleContextClick={handleContextClick}
-        handleDragging={setDragging}
-        handleDragOver={handleDragOver}
-        handleDrop={handleDrop}
-        loading={loading}
-      />
-    </div>
+    <HomeLayout
+      dragging={dragging}
+      files={files}
+      handleContextClick={handleContextClick}
+      handleDrop={handleDrop}
+      handleLogout={handleLogout}
+      handleRemoveAll={handleRemoveAll}
+      handleSettingsModal={handleSettingsModal}
+      loading={loading}
+      setDragging={setDragging}
+      settingsModal={settingsModal}
+      user={user || null}
+    />
   );
 }
 

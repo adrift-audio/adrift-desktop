@@ -1,7 +1,29 @@
+const lz = require('lz-string');
+
 const TorrentServer = require('./torrent-server');
 
 /**
- * Seed file
+ * Create .torrent file for the initial seeding
+ * @param {string} path - path to file
+ * @returns {Promise<string>}
+ */
+const initialSeeding = async (path = '') => {
+  try {
+    const torrentFilePromise = new Promise(
+      (resolve) => TorrentServer.seed(
+        path,
+        (result) => resolve(result.torrentFile),
+      ),
+    );
+    const resolved = await torrentFilePromise;
+    return lz.compress(resolved.toString('hex'));
+  } catch {
+    return '';
+  }
+};
+
+/**
+ * Seed existing .torrent file
  * @param {ProcessedFile} file - processed file data
  * @returns {Promise<string | null>}
  */
@@ -27,5 +49,6 @@ const seedFile = async (file) => {
 };
 
 module.exports = {
+  initialSeeding,
   seedFile,
 };

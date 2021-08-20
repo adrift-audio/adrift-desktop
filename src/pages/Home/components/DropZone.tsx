@@ -10,7 +10,6 @@ interface DropZoneProps {
   files: ProcessedFile[];
   handleContextClick: (id: string) => void;
   handleDragging: (value: boolean) => void;
-  handleDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
   handleDrop: (event: React.DragEvent<HTMLDivElement>) => void;
   loading: boolean;
 }
@@ -21,10 +20,18 @@ function DropZone(props: DropZoneProps): React.ReactElement {
     files,
     handleContextClick,
     handleDragging,
-    handleDragOver,
     handleDrop,
     loading,
   } = props;
+
+  /**
+   * Handle drag over
+   * @param {React.DragEvent<HTMLDivElement>} event - drag event
+   * @returns {void}
+   */
+  const handleDragOver = (
+    event: React.DragEvent<HTMLDivElement>,
+  ): void => event.preventDefault();
 
   return (
     <div
@@ -55,6 +62,7 @@ function DropZone(props: DropZoneProps): React.ReactElement {
           index={index}
           key={item.id}
           name={item.name}
+          torrentCreated={item.torrentCreated}
         />
       )) }
     </div>

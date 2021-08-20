@@ -9,6 +9,7 @@ interface ListItemProps {
   id: string;
   index: number;
   name: string;
+  torrentCreated: boolean;
 }
 
 function ListItem(props: ListItemProps): React.ReactElement {
@@ -18,6 +19,7 @@ function ListItem(props: ListItemProps): React.ReactElement {
     id,
     index,
     name,
+    torrentCreated,
   } = props;
 
   const formattedDuration = useMemo(
@@ -27,7 +29,9 @@ function ListItem(props: ListItemProps): React.ReactElement {
 
   return (
     <button
-      className="flex justify-content-between list-item"
+      className={`flex justify-content-between list-item ${
+        !torrentCreated ? 'item-loading' : ''
+      }`}
       onContextMenu={(): void => handleContextClick(id)}
       type="button"
     >

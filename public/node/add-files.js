@@ -1,11 +1,9 @@
 const cuid = require('cuid');
 const fs = require('fs/promises');
-const lz = require('lz-string');
 const mimeTypes = require('mime-types');
 
 const getFileExtension = require('./get-file-extension');
 const getFileName = require('./get-file-name');
-const TorrentServer = require('./torrent-server');
 
 // Custom error message as a return value for the recursive parser
 const errorMessage = 'error';
@@ -16,23 +14,6 @@ const allowedExtensions = [
   'flac',
   'mp3',
 ];
-
-/**
- * Start seeding and create a .torrent file for the file
- * @param {string} path - path to the file
- * @returns {Promise<Buffer>}
- */
-const createTorrentFile = async (path = '') => {
-  const torrentPromise = new Promise(
-    (resolve) => TorrentServer.seed(
-      path,
-      (result) => resolve(result.torrentFile),
-    ),
-  );
-
-  const resolved = await torrentPromise;
-  return resolved;
-};
 
 /**
  * Parse directories recursively to get files
@@ -70,8 +51,6 @@ const parseDirectoriesRecursively = async (paths = [], results = []) => {
             return array;
           }
 
-          const torrentFile = await createTorrentFile(path);
-
           files.push({
             added: Date.now(),
             duration: null,
@@ -80,7 +59,8 @@ const parseDirectoriesRecursively = async (paths = [], results = []) => {
             name,
             path,
             size: item.size,
-            torrent: lz.compress(torrentFile.toString('hex')),
+            torrent: '',
+            torrentCreated: false,
             type: mimeTypes.contentType(extension),
           });
 
@@ -106,13 +86,9 @@ const parseDirectoriesRecursively = async (paths = [], results = []) => {
 /**
  * Add files
  * @param {ProcessedItems[]} items - processed items array
- * @returns {Promise<ProcessedItems[] | string | Error>}
+ * @returns {Promise<ProcessedItems[] | string>}
  */
 module.exports = async (items = []) => {
-  if (!(Array.isArray(items) && items.length > 0)) {
-    return [];
-  }
-
   try {
     const results = [];
 
@@ -127,12 +103,10 @@ module.exports = async (items = []) => {
             return array;
           }
 
-          // TODO: fix this, it should be done after the initial track adding is done
-          const torrentFile = 'asd'; // await createTorrentFile(filtered[i].path);
           results.push({
             ...filtered[i],
             id: cuid(),
-            torrent: lz.compress(torrentFile.toString('hex')),
+            torrent: '',
           });
           return array;
         }
