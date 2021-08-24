@@ -47,6 +47,8 @@ async function createWindow() {
     globalShortcut.register('F5', () => null);
   }
 
+  mainWindow.on('close', () => console.log('closing'));
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });

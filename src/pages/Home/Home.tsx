@@ -25,7 +25,7 @@ interface ExtendedFile extends File {
 }
 
 function Home(): React.ReactElement {
-  const [counter, setCounter] = useState<number>(10);
+  const [counter, setCounter] = useState<number>(2);
 
   const [dragging, setDragging] = useState<boolean>(false);
   const [files, setFiles] = useState<ProcessedFile[]>([]);
@@ -61,14 +61,12 @@ function Home(): React.ReactElement {
 
   const handlePlayNext = useCallback(
     async (): Promise<null | void> => {
-      console.log('seeding new file...', files[counter]);
+      console.log('seeding new file...', files, counter);
       const magnetLink = await global.electron.seedFile(files[counter]);
       if (!magnetLink) {
         // TODO: error handling
         return null;
       }
-
-      log(`magnet: ${magnetLink}`);
 
       const encoded = encodeLink(magnetLink);
       if (socketClient?.current?.connected) {
@@ -81,9 +79,10 @@ function Home(): React.ReactElement {
         );
       }
 
-      return setCounter((state) => (state >= files.length && 0) || state + 1);
+      setCounter((state) => (state >= files.length && 0) || state + 1);
+      return log(`magnet: ${magnetLink}`);
     },
-    [files],
+    [counter, files],
   );
 
   useEffect(
@@ -94,11 +93,14 @@ function Home(): React.ReactElement {
         SOCKET_EVENTS.CONNECT,
         (): void => {
           log(`connected ${socketConnection.id}`);
-          setSocketClient(socketConnection);
+          return setSocketClient(socketConnection);
         },
       );
 
-      socketConnection.on(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
+      socketConnection.on(SOCKET_EVENTS.PLAY_NEXT, () => {
+        console.log('play next inc');
+        handlePlayNext();
+      });
 
       return () => {
         if (filesReady && socketConnection) {
@@ -142,11 +144,13 @@ function Home(): React.ReactElement {
     return setFiles(fileList);
   };
 
+  const testTorrent = async () => {
+    const res = await global.electron.getTorrent(files[10].path);
+    console.log('got res', res);
+  };
+
   return (
     <div className="flex direction-column home fade-in">
-      <h1>
-        Home
-      </h1>
       <DropZone
         dragging={dragging}
         files={files}
@@ -155,6 +159,12 @@ function Home(): React.ReactElement {
         handleDrop={handleDrop}
         loading={loading}
       />
+      <button
+        onClick={testTorrent}
+        type="button"
+      >
+        Test
+      </button>
     </div>
   );
 }

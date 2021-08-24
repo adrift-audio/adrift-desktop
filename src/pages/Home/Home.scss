@@ -5,11 +5,11 @@
 .drop-zone {
   background-color: var(--app-background);
   border: 2px dashed var(--accent3);
-  height: 400px;
+  height: 100%;
   margin: 0 auto;
   overflow: scroll;
-  width: 400px;
   transition: background-color 160ms ease-in;
+  width: calc(100% - 300px);
 }
 .dragging {
   background-color: var(--accent6);

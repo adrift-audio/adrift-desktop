@@ -4,6 +4,8 @@ const fs = require('fs').promises;
 const mimeTypes = require('mime-types');
 const WebTorrent = require('webtorrent-hybrid');
 
+const lz = require('lz-string');
+
 // Allowed file extensions
 const allowedExtensions = [
   'aac',
@@ -81,7 +83,7 @@ const parseDirectoriesRecursively = async (paths = [], results = []) => {
 
     const files = [];
     const updatedDirectories = stats.reduce(
-      (array, item, i) => {
+      async (array, item, i) => {
         const path = `${target}/${contents[i]}`;
         if (item.isFile()) {
           const name = getFileName(path);
@@ -90,11 +92,21 @@ const parseDirectoriesRecursively = async (paths = [], results = []) => {
             return array;
           }
 
+          const torrentPromise = new Promise(
+            (resolve) => TorrentServer.seed(
+              path,
+              (result) => resolve(result.torrentFile),
+            ),
+          );
+
+          const resolved = await torrentPromise;
+
           files.push({
             added: Date.now(),
             name,
             path,
             size: item.size,
+            torrent: lz.compress(resolved.toString('hex')),
             type: mimeTypes.contentType(extension),
           });
 
@@ -195,6 +207,16 @@ process.once(
           } catch {
             return null;
           }
+        },
+        async getTorrent(path = '') {
+          const seedingPromise = new Promise(
+            (resolve) => TorrentServer.seed(
+              path,
+              (torrent) => resolve(torrent.torrentFile),
+            ),
+          );
+          const resolved = await seedingPromise;
+          return lz.compress(resolved.toString('hex'));
         },
       },
     );
