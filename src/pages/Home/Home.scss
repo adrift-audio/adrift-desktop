@@ -1,17 +1,55 @@
 .home {
   height: 100vh;
   padding: var(--spacer);
+  .header {
+    height: calc(var(--spacer) * 2);
+    .header-icon-button {
+      background-color: var(--app-background);
+      border: none;
+      border-radius: 50%;
+      height: calc(var(--spacer) * 2);
+      outline: none;
+      transition: background-color 160ms ease-out;
+      width: calc(var(--spacer) * 2);
+      .header-icon {
+        height: calc((var(--spacer) * 2) - var(--spacer-quarter));
+        margin: 0 auto;
+        width: calc((var(--spacer) * 2) - var(--spacer-quarter));
+      }
+    }
+    .header-icon-button:hover {
+      background-color: var(--accent6);
+      cursor: pointer;
+      transition: background-color 160ms ease-in;
+    }
+  }
 }
 .drop-zone {
   background-color: var(--app-background);
-  border: 2px dashed var(--accent3);
-  height: 100%;
+  border: 1px solid var(--accent1);
+  height: calc(100% - (var(--spacer) * 2));
   margin: 0 auto;
   overflow: scroll;
+  padding: var(--spacer-quarter);
   transition: background-color 160ms ease-in;
-  width: calc(100% - 300px);
+  width: 100%;
+  .list-item {
+    background-color: transparent;
+    border: none;
+    padding: var(--spacer-quarter);
+    .list-item-index {
+      text-align: left;
+      width: calc(var(--spacer) * 2);
+    }
+  }
 }
 .dragging {
   background-color: var(--accent6);
   transition: background-color 160ms ease-out;
+}
+.disable-events {
+  pointer-events: none;
+}
+.enable-events {
+  pointer-events: auto;
 }

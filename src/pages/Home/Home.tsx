@@ -7,7 +7,9 @@ import React, {
 import { Socket } from 'socket.io-client';
 import { useHistory } from 'react-router-dom';
 
+import Cog from '../../assets/cog.svg';
 import combineLists from '../../utilities/combine-lists';
+import DarkWave from '../../assets/wave-dark.svg';
 import DropZone from './components/DropZone';
 import encodeLink from '../../utilities/encode-link';
 import { getData, storeData } from '../../utilities/data-service';
@@ -151,6 +153,28 @@ function Home(): React.ReactElement {
 
   return (
     <div className="flex direction-column home fade-in">
+      <div className="flex justify-content-between align-items-center header">
+        <button
+          className="flex justify-content-between align-items-center header-icon-button"
+          type="button"
+        >
+          <img
+            alt="Adrift"
+            className="header-icon"
+            src={DarkWave}
+          />
+        </button>
+        <button
+          className="flex justify-content-between align-items-center header-icon-button"
+          type="button"
+        >
+          <img
+            alt="Options"
+            className="header-icon"
+            src={Cog}
+          />
+        </button>
+      </div>
       <DropZone
         dragging={dragging}
         files={files}

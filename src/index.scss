@@ -13,6 +13,7 @@
   --muted-text: #9a9a9a;
   --spacer: 16px;
   --spacer-half: 8px;
+  --spacer-quarter: 4px;
   --success: #0C7640;
 }
 
@@ -52,11 +53,17 @@ img {
 }
 
 /* Reusable classes */
+.align-items-center {
+  align-items: center;
+}
 .flex {
   display: flex;
 }
 .direction-column {
   flex-direction: column;
+}
+.justify-content-between {
+  justify-content: space-between;
 }
 .justify-content-center {
   justify-content: center;
@@ -66,6 +73,9 @@ img {
 }
 .mt-16 {
   margin-top: var(--spacer);
+}
+.no-outline {
+  outline: none;
 }
 .text-center {
   text-align: center;

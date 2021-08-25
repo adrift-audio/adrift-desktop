@@ -22,16 +22,28 @@ function DropZone(props: DropZoneProps): React.ReactElement {
     loading,
   } = props;
 
-  const dragEnter = () => handleDragging(true);
+  const dragEnter = (event: any) => {
+    console.log('drag enter');
+    event.preventDefault();
+    handleDragging(true);
+  };
 
-  const dragLeave = () => handleDragging(false);
+  const dragOver = (event: any) => {
+    console.log('dragOver');
+    return handleDragOver(event);
+  };
+
+  const dragLeave = () => {
+    console.log('drag leave');
+    handleDragging(false);
+  };
 
   return (
     <div
       className={`flex direction-column mt-16 drop-zone ${dragging ? 'dragging' : ''}`}
       onDragEnter={dragEnter}
       onDragLeave={dragLeave}
-      onDragOver={handleDragOver}
+      onDragOver={dragOver}
       onDrop={handleDrop}
     >
       { loading && (
@@ -39,10 +51,23 @@ function DropZone(props: DropZoneProps): React.ReactElement {
           Loading...
         </div>
       ) }
-      { files.length > 0 && !loading && files.map((item: ProcessedFile): React.ReactElement => (
-        <div key={item.path}>
-          { item.name }
-        </div>
+      { files.length > 0 && !loading && !dragging && files.map((
+        item: ProcessedFile,
+        index: number,
+      ): React.ReactElement => (
+        <button
+          className="flex list-item"
+          key={item.path}
+          onClick={() => console.log('clicked', item.name)}
+          type="button"
+        >
+          <span className="list-item-index">
+            { index + 1 }
+          </span>
+          <span>
+            { item.name }
+          </span>
+        </button>
       )) }
     </div>
   );
