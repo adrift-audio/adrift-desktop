@@ -2,6 +2,7 @@ import React, {
   memo,
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 import axios from 'axios';
@@ -21,7 +22,12 @@ import {
 } from '../../utilities/data-service';
 import log from '../../utilities/log';
 import useRefState from '../../hooks/use-ref-state';
-import { PreProcessedFile, ProcessedFile, User } from '../../@types/models';
+import {
+  ExtendedFile,
+  PreProcessedFile,
+  ProcessedFile,
+  User,
+} from '../../@types/models';
 import { ROUTES, SOCKET_EVENTS } from '../../constants';
 import connect from '../../utilities/socket-connection';
 import SettingsModal from './components/SettingsModal';
@@ -29,10 +35,6 @@ import './Home.scss';
 import { BACKEND_URL } from '../../configuration';
 
 const global = window as any;
-
-interface ExtendedFile extends File {
-  path: string;
-}
 
 function Home(): React.ReactElement {
   const [counter, setCounter] = useState<number>(2);
@@ -46,6 +48,7 @@ function Home(): React.ReactElement {
   const [token, setToken] = useState<string>('');
   const [user, setUser] = useState<User>();
 
+  const audioRef = useRef<HTMLAudioElement>();
   const router = useHistory();
 
   // get token
@@ -152,6 +155,7 @@ function Home(): React.ReactElement {
     setLoading(true);
 
     const items = Object.values(event.dataTransfer.files) as ExtendedFile[];
+
     const processedFiles: ProcessedFile[] = await global.electron.handleFileAdding(
       items.map((item: ExtendedFile): PreProcessedFile => ({
         added: Date.now(),

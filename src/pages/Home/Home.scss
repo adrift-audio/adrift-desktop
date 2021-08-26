@@ -2,6 +2,9 @@
   height: 100vh;
   padding: var(--spacer);
 }
+.audio {
+  display: none;
+}
 .header {
   height: calc(var(--spacer) * 2);
   .header-icon-button {

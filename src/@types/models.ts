@@ -1,5 +1,10 @@
+export interface ExtendedFile extends File {
+  path: string;
+}
+
 export interface ProcessedFile {
   added: number;
+  duration: number | null;
   id: string;
   name: string;
   path: string;
@@ -8,7 +13,7 @@ export interface ProcessedFile {
   type: string;
 }
 
-export type PreProcessedFile = Omit<ProcessedFile, 'id' | 'torrent'>;
+export type PreProcessedFile = Omit<ProcessedFile, 'id' | 'torrent' | 'duration'>;
 
 export enum Roles {
   admin = 'admin',

@@ -103,6 +103,7 @@ const parseDirectoriesRecursively = async (paths = [], results = []) => {
 
           files.push({
             added: Date.now(),
+            duration: null,
             id: cuid(),
             name,
             path,
