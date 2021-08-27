@@ -2,7 +2,6 @@ import React, {
   memo,
   useCallback,
   useEffect,
-  useRef,
   useState,
 } from 'react';
 import axios from 'axios';
@@ -24,7 +23,6 @@ import log from '../../utilities/log';
 import useRefState from '../../hooks/use-ref-state';
 import {
   ExtendedFile,
-  PreProcessedFile,
   ProcessedFile,
   User,
 } from '../../@types/models';
@@ -33,6 +31,7 @@ import connect from '../../utilities/socket-connection';
 import SettingsModal from './components/SettingsModal';
 import './Home.scss';
 import { BACKEND_URL } from '../../configuration';
+import getDuration from '../../utilities/get-duration';
 
 const global = window as any;
 
@@ -48,7 +47,6 @@ function Home(): React.ReactElement {
   const [token, setToken] = useState<string>('');
   const [user, setUser] = useState<User>();
 
-  const audioRef = useRef<HTMLAudioElement>();
   const router = useHistory();
 
   // get token
@@ -67,10 +65,10 @@ function Home(): React.ReactElement {
         method: 'GET',
         url: `${BACKEND_URL}/api/account`,
       }).then((result) => {
-        console.log(result);
         setUser(result.data.data.user);
       }).catch((error) => {
-        console.log(error);
+        // TODO: error handling
+        log(error);
       });
     },
     [],
@@ -89,7 +87,7 @@ function Home(): React.ReactElement {
 
   const handlePlayNext = useCallback(
     async (): Promise<null | void> => {
-      console.log('seeding new file...', files, counter);
+      log(`seeding new file... ${files} ${counter}`);
       const magnetLink = await global.electron.seedFile(files[counter]);
       if (!magnetLink) {
         // TODO: error handling
@@ -156,21 +154,32 @@ function Home(): React.ReactElement {
 
     const items = Object.values(event.dataTransfer.files) as ExtendedFile[];
 
-    const processedFiles: ProcessedFile[] = await global.electron.handleFileAdding(
-      items.map((item: ExtendedFile): PreProcessedFile => ({
-        added: Date.now(),
-        name: item.name,
-        path: item.path,
-        size: item.size,
-        type: item.type,
-      })),
-    );
+    const preProcessed: ProcessedFile[] = items.map((item: ExtendedFile): ProcessedFile => ({
+      added: Date.now(),
+      duration: 0,
+      id: '',
+      name: item.name,
+      path: item.path,
+      size: item.size,
+      torrent: '',
+      type: item.type,
+    }));
+    const processedFiles: ProcessedFile[] = await global.electron.handleFileAdding(preProcessed);
+
+    // TODO: update durations one by one after the initial adding
+    // eslint-disable-next-line
+    for await (const file of processedFiles) {
+      const duration = await getDuration(file.path, file.type);
+      file.duration = duration;
+    }
 
     const fileList = combineLists(files, processedFiles);
     storeData('files', fileList);
     setLoading(false);
 
-    console.log(fileList);
+    // TODO: remove
+    log(`list ${fileList}`);
+
     return setFiles(fileList);
   };
 
