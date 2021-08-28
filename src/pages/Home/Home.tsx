@@ -206,6 +206,7 @@ function Home(): React.ReactElement {
           handleLogout={handleLogout}
           handleRemoveAll={handleRemoveAll}
           handleSettingsModal={handleSettingsModal}
+          user={user || null}
         />
       ) }
       <div className="flex justify-content-between align-items-center header noselect">
