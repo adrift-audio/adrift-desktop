@@ -3,7 +3,7 @@ const { contextBridge } = require('electron');
 
 const addFiles = require('./node/add-files');
 const fileLoader = require('./node/file-loader');
-const TorrentServer = require('./node/torrent-server');
+const { seedFile } = require('./node/torrent-services');
 
 process.once(
   'loaded',
@@ -32,27 +32,11 @@ process.once(
         },
         /**
          * Seed selected file
-         * @param {object} file - file object
-         * @returns {null | string}
+         * @param {ProcessedFile} file - file object
+         * @returns {Promise<string | null>}
          */
         async seedFile(file) {
-          const { path = '' } = file;
-          if (!path) {
-            return null;
-          }
-
-          try {
-            const seedingPromise = new Promise(
-              (resolve) => TorrentServer.seed(
-                file.path,
-                (torrent) => resolve(torrent.magnetURI),
-              ),
-            );
-            const resolvedLink = await seedingPromise;
-            return resolvedLink;
-          } catch {
-            return null;
-          }
+          return seedFile(file);
         },
       },
     );
