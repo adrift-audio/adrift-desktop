@@ -39,11 +39,21 @@
   .list-item {
     background-color: transparent;
     border: none;
-    padding: var(--spacer-quarter);
+    border-radius: var(--spacer-quarter);
+    outline: none;
+    padding: var(--spacer-quarter) var(--spacer);
+    transition: background-color 160ms ease-out;
     .list-item-index {
       text-align: left;
       width: calc(var(--spacer) * 2);
     }
+  }
+  .list-item:hover {
+    background-color: var(--accent6);
+    transition: background-color 100ms ease-in;
+  }
+  .list-item:focus {
+    background-color: var(--accent6);
   }
 }
 .dragging {

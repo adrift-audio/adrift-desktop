@@ -49,27 +49,33 @@ function Home(): React.ReactElement {
 
   const router = useHistory();
 
-  // get token
+  // get token & load user record
   useEffect(
     (): void => {
       const existingToken = getData<string>('token');
       if (!existingToken) {
         router.replace(ROUTES.signIn);
       }
+
       setToken(String(existingToken));
 
-      axios({
-        headers: {
-          Authorization: existingToken,
-        },
-        method: 'GET',
-        url: `${BACKEND_URL}/api/account`,
-      }).then((result) => {
-        setUser(result.data.data.user);
-      }).catch((error) => {
-        // TODO: error handling
-        log(error);
-      });
+      (async () => {
+        try {
+          const response = await axios({
+            headers: {
+              Authorization: existingToken,
+            },
+            method: 'GET',
+            url: `${BACKEND_URL}/api/account`,
+          });
+
+          const { data: { data: { user: userData = {} as User } = {} } = {} } = response;
+          setUser(userData);
+        } catch (error) {
+          // TODO: error handling
+          log(error);
+        }
+      })();
     },
     [],
   );
@@ -138,7 +144,16 @@ function Home(): React.ReactElement {
     [filesReady],
   );
 
-  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => event.preventDefault();
+  const handleContextClick = (id: string): void => log(`clicked ${id}`);
+
+  /**
+   * Handle drag over
+   * @param {React.DragEvent<HTMLDivElement>} event - drag event
+   * @returns {void}
+   */
+  const handleDragOver = (
+    event: React.DragEvent<HTMLDivElement>,
+  ): void => event.preventDefault();
 
   /**
    * Handle file drop
@@ -241,6 +256,7 @@ function Home(): React.ReactElement {
       <DropZone
         dragging={dragging}
         files={files}
+        handleContextClick={handleContextClick}
         handleDragging={setDragging}
         handleDragOver={handleDragOver}
         handleDrop={handleDrop}

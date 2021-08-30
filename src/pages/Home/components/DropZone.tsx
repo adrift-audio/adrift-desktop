@@ -7,6 +7,7 @@ import '../Home.scss';
 interface DropZoneProps {
   dragging: boolean;
   files: ProcessedFile[];
+  handleContextClick: (id: string) => void;
   handleDragging: (value: boolean) => void;
   handleDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
   handleDrop: (event: React.DragEvent<HTMLDivElement>) => void;
@@ -17,36 +18,19 @@ function DropZone(props: DropZoneProps): React.ReactElement {
   const {
     dragging,
     files,
+    handleContextClick,
     handleDragging,
     handleDragOver,
     handleDrop,
     loading,
   } = props;
 
-  const dragEnter = (event: any) => {
-    console.log('drag enter');
-    event.preventDefault();
-    handleDragging(true);
-  };
-
-  const dragOver = (event: any) => {
-    console.log('dragOver');
-    return handleDragOver(event);
-  };
-
-  const dragLeave = () => {
-    console.log('drag leave');
-    handleDragging(false);
-  };
-
-  const handleContextClick = (id: string): void => console.log('clicked', id);
-
   return (
     <div
       className={`flex direction-column mt-16 drop-zone ${dragging ? 'dragging' : ''}`}
-      onDragEnter={dragEnter}
-      onDragLeave={dragLeave}
-      onDragOver={dragOver}
+      onDragEnter={(): void => handleDragging(true)}
+      onDragLeave={(): void => handleDragging(false)}
+      onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
       { loading && (
@@ -59,6 +43,7 @@ function DropZone(props: DropZoneProps): React.ReactElement {
         index: number,
       ): React.ReactElement => (
         <ListItem
+          duration={Number(item.duration)}
           handleContextClick={handleContextClick}
           id={item.id}
           index={index}
