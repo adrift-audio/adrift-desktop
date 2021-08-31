@@ -1,6 +1,5 @@
 import React, {
   memo,
-  useCallback,
   useEffect,
   useState,
 } from 'react';
@@ -9,15 +8,22 @@ import { Socket } from 'socket.io-client';
 import { useHistory } from 'react-router-dom';
 
 import { BACKEND_URL } from '../../configuration';
+import {
+  CLIENT_TYPE,
+  CLIENT_TYPES,
+  ROUTES,
+  SOCKET_EVENTS,
+} from '../../constants';
 import combineLists from '../../utilities/combine-lists';
 import connect from '../../utilities/socket-connection';
-import encodeLink from '../../utilities/encode-link';
 import {
   deleteData,
   getData,
   storeData,
   storeKeys,
 } from '../../utilities/data-service';
+import encodeLink from '../../utilities/encode-link';
+import * as EventTypes from '../../@types/events';
 import {
   ExtendedFile,
   ProcessedFile,
@@ -26,15 +32,12 @@ import {
 import getDuration from '../../utilities/get-duration';
 import HomeLayout from './components/HomeLayout';
 import log from '../../utilities/log';
-import { ROUTES, SOCKET_EVENTS } from '../../constants';
 import useRefState from '../../hooks/use-ref-state';
 import './Home.scss';
 
 const global = window as any;
 
 function Home(): React.ReactElement {
-  const [counter, setCounter] = useState<number>(2);
-
   const [dragging, setDragging] = useState<boolean>(false);
   const [files, setFiles] = useState<ProcessedFile[]>([]);
   const [filesReady, setFilesReady] = useState<boolean>(false);
@@ -88,31 +91,46 @@ function Home(): React.ReactElement {
     [],
   );
 
-  const handlePlayNext = useCallback(
-    async (): Promise<null | void> => {
-      log(`seeding new file... ${files} ${counter}`);
-      const magnetLink = await global.electron.seedFile(files[counter]);
-      if (!magnetLink) {
-        // TODO: error handling
-        return null;
-      }
+  const handleClientConnection = ({ client }: EventTypes.ClientConnectionPayload): void => {
+    if (client === CLIENT_TYPES.mobile && socketClient?.current?.connected) {
+      const playlist = files.map((file) => ({
+        added: file.added,
+        duration: file.duration,
+        id: file.id,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      }));
+      socketClient.current.emit(
+        SOCKET_EVENTS.AVAILABLE_PLAYLIST,
+        {
+          issuer: CLIENT_TYPE,
+          playlist,
+          target: CLIENT_TYPES.mobile,
+        },
+      );
+    }
+  };
 
-      const encoded = encodeLink(magnetLink);
-      if (socketClient?.current?.connected) {
-        socketClient.current.emit(
-          SOCKET_EVENTS.SWITCH_TRACK,
-          {
-            link: encoded,
-            track: files[counter],
-          },
-        );
-      }
-
-      setCounter((state) => (state >= files.length && 0) || state + 1);
-      return log(`magnet: ${magnetLink}`);
-    },
-    [counter, files],
-  );
+  const handlePlayNext = async ({ id }: EventTypes.PlayNextPayload): Promise<void> => {
+    log(`seed next ${id}`);
+    const [track] = files.filter(
+      (item: ProcessedFile): boolean => item.id === id,
+    );
+    const magnetLink = await global.electron.seedFile(track.torrent);
+    console.log('received magent', magnetLink);
+    if (socketClient?.current?.connected) {
+      socketClient.current.emit(
+        SOCKET_EVENTS.SWITCH_TRACK,
+        {
+          issuer: CLIENT_TYPE,
+          link: encodeLink(magnetLink),
+          target: CLIENT_TYPES.mobile,
+          track,
+        },
+      );
+    }
+  };
 
   useEffect(
     () => {
@@ -122,17 +140,32 @@ function Home(): React.ReactElement {
         SOCKET_EVENTS.CONNECT,
         (): void => {
           log(`connected ${socketConnection.id}`);
+          const playlist = files.map((file) => ({
+            added: file.added,
+            duration: file.duration,
+            id: file.id,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+          }));
+          socketConnection.emit(
+            SOCKET_EVENTS.AVAILABLE_PLAYLIST,
+            {
+              issuer: CLIENT_TYPE,
+              playlist,
+              target: CLIENT_TYPES.mobile,
+            },
+          );
           return setSocketClient(socketConnection);
         },
       );
 
-      socketConnection.on(SOCKET_EVENTS.PLAY_NEXT, () => {
-        console.log('play next inc');
-        handlePlayNext();
-      });
+      socketConnection.on(SOCKET_EVENTS.CLIENT_CONNECTED, handleClientConnection);
+      socketConnection.on(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
 
       return () => {
         if (filesReady && socketConnection) {
+          socketConnection.off(SOCKET_EVENTS.CLIENT_CONNECTED, handleClientConnection);
           socketConnection.off(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
           socketConnection.close();
         }

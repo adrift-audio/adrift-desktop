@@ -21,6 +21,8 @@ export const ROUTES = {
 } as const;
 
 export const SOCKET_EVENTS = {
+  AVAILABLE_PLAYLIST: 'AVAILABLE_PLAYLIST',
+  CLIENT_CONNECTED: 'CLIENT_CONNECTED',
   CONNECT: 'connect',
   DISCONNECT: 'disconnect',
   PLAY_NEXT: 'PLAY_NEXT',

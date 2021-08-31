@@ -24,26 +24,26 @@ const initialSeeding = async (path = '') => {
 
 /**
  * Seed existing .torrent file
- * @param {ProcessedFile} file - processed file data
+ * @param {string} torrent - compressed .torrent file in a string format
  * @returns {Promise<string | null>}
  */
-const seedFile = async (file) => {
-  const { torrent = '' } = file;
+const seedFile = async (torrent = '') => {
   if (!torrent) {
     return null;
   }
 
-  // TODO: rewrite so that the torrent file was used for the seeding
+  const buffer = Buffer.from(lz.decompress(torrent), 'hex');
   try {
     const seedingPromise = new Promise(
       (resolve) => TorrentServer.seed(
-        file.path,
+        buffer,
         (seededTorrent) => resolve(seededTorrent.magnetURI),
       ),
     );
     const resolvedLink = await seedingPromise;
     return resolvedLink;
-  } catch {
+  } catch (error) {
+    console.log(error);
     return null;
   }
 };
