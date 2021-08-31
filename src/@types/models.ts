@@ -5,11 +5,13 @@ export interface ExtendedFile extends File {
 export interface ProcessedFile {
   added: number;
   duration: number | null;
+  durationLoaded: boolean;
   id: string;
   name: string;
   path: string;
   size: number;
   torrent: string;
+  torrentCreated: boolean;
   type: string;
 }
 

@@ -156,11 +156,42 @@ function Home(): React.ReactElement {
   ): void => event.preventDefault();
 
   /**
+   * Calculate durations of the tracks
+   * @param {ProcessedFile[]} fullList - list of all of the processed files
+   * @param withoutDuration - list of the items that were not processed yet
+   * @returns {Promise<void | null>}
+   */
+  const calculateDurations = async (
+    fullList: ProcessedFile[],
+    withoutDuration: ProcessedFile[],
+  ): Promise<void | null> => {
+    if (withoutDuration.length === 0) {
+      return storeData<ProcessedFile[]>(storeKeys.files, fullList);
+    }
+
+    const [item, ...rest] = withoutDuration;
+    const duration = await getDuration(item.path, item.type);
+    const updatedFullList = fullList.map((file: ProcessedFile): ProcessedFile => {
+      if (file.id === item.id) {
+        return {
+          ...file,
+          duration,
+          durationLoaded: true,
+        };
+      }
+      return file;
+    });
+
+    setFiles(updatedFullList);
+    return calculateDurations(updatedFullList, rest);
+  };
+
+  /**
    * Handle file drop
    * @param {React.DragEvent<HTMLDivElement>} event - drop event
    * @returns {Promise<void>}
    */
-  const handleDrop = async (event: React.DragEvent<HTMLDivElement>): Promise<void> => {
+  const handleDrop = async (event: React.DragEvent<HTMLDivElement>): Promise<void | null> => {
     event.stopPropagation();
     event.preventDefault();
 
@@ -172,30 +203,24 @@ function Home(): React.ReactElement {
     const preProcessed: ProcessedFile[] = items.map((item: ExtendedFile): ProcessedFile => ({
       added: Date.now(),
       duration: 0,
+      durationLoaded: false,
       id: '',
       name: item.name,
       path: item.path,
       size: item.size,
       torrent: '',
+      torrentCreated: false,
       type: item.type,
     }));
     const processedFiles: ProcessedFile[] = await global.electron.handleFileAdding(preProcessed);
 
-    // TODO: update durations one by one after the initial adding
-    // eslint-disable-next-line
-    for await (const file of processedFiles) {
-      const duration = await getDuration(file.path, file.type);
-      file.duration = duration;
-    }
-
     const fileList = combineLists(files, processedFiles);
-    storeData('files', fileList);
+    setFiles(fileList);
+    storeData(storeKeys.files, fileList);
     setLoading(false);
 
-    // TODO: remove
-    log(`list ${fileList}`);
-
-    return setFiles(fileList);
+    const withoutDuration = fileList.filter(({ durationLoaded }): boolean => !durationLoaded);
+    return calculateDurations(fileList, withoutDuration);
   };
 
   const handleSettingsModal = (): void => setSettingsModal((state): boolean => !state);

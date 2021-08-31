@@ -6,7 +6,7 @@
 export default (duration: number): string => {
   const toNumber = Number(duration);
   if (!duration || Number.isNaN(toNumber)) {
-    return '00:00';
+    return '--:--';
   }
 
   const seconds = Math.round(toNumber);

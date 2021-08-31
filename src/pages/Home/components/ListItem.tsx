@@ -20,7 +20,7 @@ function ListItem(props: ListItemProps): React.ReactElement {
     name,
   } = props;
 
-  const calculatedDuration = useMemo(
+  const formattedDuration = useMemo(
     (): string => formatDuration(duration),
     [duration],
   );
@@ -40,7 +40,7 @@ function ListItem(props: ListItemProps): React.ReactElement {
         </span>
       </div>
       <span>
-        { calculatedDuration }
+        { formattedDuration }
       </span>
     </button>
   );
