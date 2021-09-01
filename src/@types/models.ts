@@ -10,9 +10,12 @@ export interface ProcessedFile {
   name: string;
   path: string;
   size: number;
-  torrent: string;
-  torrentCreated: boolean;
   type: string;
+}
+
+export interface Link {
+  id: string;
+  link: string;
 }
 
 export enum Roles {

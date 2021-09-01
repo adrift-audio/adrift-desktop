@@ -26,6 +26,7 @@ import encodeLink from '../../utilities/encode-link';
 import * as EventTypes from '../../@types/events';
 import {
   ExtendedFile,
+  Link,
   ProcessedFile,
   User,
 } from '../../@types/models';
@@ -42,6 +43,7 @@ function Home(): React.ReactElement {
   const [files, setFiles] = useState<ProcessedFile[]>([]);
   const [filesReady, setFilesReady] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const [links, setLinks] = useState<Link[]>([]);
   const [settingsModal, setSettingsModal] = useState<boolean>(false);
   const [socketClient, setSocketClient] = useRefState<Socket>({} as Socket);
   const [token, setToken] = useState<string>('');
@@ -113,12 +115,10 @@ function Home(): React.ReactElement {
   };
 
   const handlePlayNext = async ({ id }: EventTypes.PlayNextPayload): Promise<void> => {
-    log(`seed next ${id}`);
     const [track] = files.filter(
       (item: ProcessedFile): boolean => item.id === id,
     );
-    const magnetLink = await global.electron.seedFile(track.torrent);
-    console.log('received magent', magnetLink);
+    const magnetLink = await global.electron.seedFile(track.path);
     if (socketClient?.current?.connected) {
       socketClient.current.emit(
         SOCKET_EVENTS.SWITCH_TRACK,
@@ -177,12 +177,11 @@ function Home(): React.ReactElement {
   const handleContextClick = (id: string): void => log(`clicked ${id}`);
 
   /**
-   * Add .torrent files recursively
+   * Seed torrents recursively
    * @param {ProcessedFile[]} fullList - list of all of the processed files
-   * @param {ProcessedFile[]} withoutTorrent - list of the items that were not processed yet
    * @returns {Promise<void | null>}
    */
-  const addTorrents = async (
+  const seedTorrents = async (
     fullList: ProcessedFile[],
     withoutTorrent: ProcessedFile[],
   ): Promise<void | null> => {
@@ -196,8 +195,6 @@ function Home(): React.ReactElement {
       file: ProcessedFile,
     ): ProcessedFile => (file.id === item.id && ({
       ...file,
-      torrent,
-      torrentCreated: true,
     })) || file);
 
     setFiles(updatedFullList);
@@ -216,8 +213,7 @@ function Home(): React.ReactElement {
   ): Promise<void | null> => {
     if (withoutDuration.length === 0) {
       storeData<ProcessedFile[]>(storeKeys.files, fullList);
-      const withoutTorrent = fullList.filter(({ torrentCreated }): boolean => !torrentCreated);
-      return addTorrents(fullList, withoutTorrent);
+      return seedTorrents(fullList);
     }
 
     const [item, ...rest] = withoutDuration;
@@ -256,8 +252,6 @@ function Home(): React.ReactElement {
       name: item.name,
       path: item.path,
       size: item.size,
-      torrent: '',
-      torrentCreated: false,
       type: item.type,
     }));
     const processedFiles: ProcessedFile[] = await global.electron.handleFileAdding(preProcessed);
