@@ -1,5 +1,6 @@
 import React, {
   memo,
+  useCallback,
   useEffect,
   useState,
 } from 'react';
@@ -114,32 +115,48 @@ function Home(): React.ReactElement {
     }
   };
 
-  const handlePlayNext = async ({ id }: EventTypes.PlayNextPayload): Promise<void> => {
-    const [track] = files.filter(
-      (item: ProcessedFile): boolean => item.id === id,
-    );
-    const magnetLink = await global.electron.seedFile(track.path);
-    if (socketClient?.current?.connected) {
-      socketClient.current.emit(
-        SOCKET_EVENTS.SWITCH_TRACK,
-        {
-          issuer: CLIENT_TYPE,
-          link: encodeLink(magnetLink),
-          target: CLIENT_TYPES.mobile,
-          track,
-        },
+  const handlePlayNext = useCallback(
+    async ({ id }: EventTypes.PlayNextPayload): Promise<void> => {
+      const [track] = files.filter(
+        (item: ProcessedFile): boolean => item.id === id,
       );
-    }
-  };
+      const [seededLink] = links.filter((item: Link): boolean => item.id === id);
+      console.log(seededLink);
+      let magnetLink = '';
+      if (seededLink) {
+        magnetLink = seededLink.link;
+      } else {
+        magnetLink = await global.electron.seedFile(track.path);
+        setLinks((state: Link[]): Link[] => [
+          ...state,
+          {
+            id,
+            link: magnetLink,
+          } as Link,
+        ]);
+      }
+
+      if (socketClient?.current?.connected) {
+        socketClient.current.emit(
+          SOCKET_EVENTS.SWITCH_TRACK,
+          {
+            issuer: CLIENT_TYPE,
+            link: encodeLink(magnetLink),
+            target: CLIENT_TYPES.mobile,
+            track,
+          },
+        );
+      }
+    },
+    [files, links],
+  );
 
   useEffect(
     () => {
       const socketConnection = connect(token);
-
       socketConnection.on(
         SOCKET_EVENTS.CONNECT,
         (): void => {
-          log(`connected ${socketConnection.id}`);
           const playlist = files.map((file) => ({
             added: file.added,
             duration: file.duration,
@@ -156,6 +173,7 @@ function Home(): React.ReactElement {
               target: CLIENT_TYPES.mobile,
             },
           );
+
           return setSocketClient(socketConnection);
         },
       );
@@ -177,31 +195,6 @@ function Home(): React.ReactElement {
   const handleContextClick = (id: string): void => log(`clicked ${id}`);
 
   /**
-   * Seed torrents recursively
-   * @param {ProcessedFile[]} fullList - list of all of the processed files
-   * @returns {Promise<void | null>}
-   */
-  const seedTorrents = async (
-    fullList: ProcessedFile[],
-    withoutTorrent: ProcessedFile[],
-  ): Promise<void | null> => {
-    if (withoutTorrent.length === 0) {
-      return storeData<ProcessedFile[]>(storeKeys.files, fullList);
-    }
-
-    const [item, ...rest] = withoutTorrent;
-    const torrent = await global.electron.createTorrent(item.path);
-    const updatedFullList = fullList.map((
-      file: ProcessedFile,
-    ): ProcessedFile => (file.id === item.id && ({
-      ...file,
-    })) || file);
-
-    setFiles(updatedFullList);
-    return addTorrents(updatedFullList, rest);
-  };
-
-  /**
    * Calculate durations of the tracks
    * @param {ProcessedFile[]} fullList - list of all of the processed files
    * @param {ProcessedFile[]} withoutDuration - list of the items that were not processed yet
@@ -212,8 +205,7 @@ function Home(): React.ReactElement {
     withoutDuration: ProcessedFile[],
   ): Promise<void | null> => {
     if (withoutDuration.length === 0) {
-      storeData<ProcessedFile[]>(storeKeys.files, fullList);
-      return seedTorrents(fullList);
+      return storeData<ProcessedFile[]>(storeKeys.files, fullList);
     }
 
     const [item, ...rest] = withoutDuration;

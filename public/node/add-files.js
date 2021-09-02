@@ -59,8 +59,6 @@ const parseDirectoriesRecursively = async (paths = [], results = []) => {
             name,
             path,
             size: item.size,
-            torrent: '',
-            torrentCreated: false,
             type: mimeTypes.contentType(extension),
           });
 
@@ -106,7 +104,6 @@ module.exports = async (items = []) => {
           results.push({
             ...filtered[i],
             id: cuid(),
-            torrent: '',
           });
           return array;
         }
