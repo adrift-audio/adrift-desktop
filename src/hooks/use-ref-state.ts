@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
-export default function useRefState<T>(initialValue: T): [any, (value: any) => void] {
+export default function useRefState<T>(
+  initialValue: T,
+): [React.MutableRefObject<T>, (value: T) => void] {
   const [state, setState] = useState<T>(initialValue);
   const refState = useRef<T>(state);
   useEffect(

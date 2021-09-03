@@ -1,6 +1,8 @@
 import React from 'react';
 
-const global = window as any;
+import { ExtendedWindow } from '../@types/models';
+
+const global: ExtendedWindow = window as any;
 
 export default async function getDuration(
   path: string,

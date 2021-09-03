@@ -16,10 +16,23 @@ const allowedExtensions = [
 ];
 
 /**
+ * @typedef {{
+ *  added: number;
+ *  duration: number;
+ *  durationLoaded: boolean;
+ *  id: string;
+ *  name: string;
+ *  path: string;
+ *  size: number;
+ *  type: string;
+ * }} ProcessedFile
+ */
+
+/**
  * Parse directories recursively to get files
  * @param {string[]} paths - array of paths
- * @param {object[]} results - array of results with file infomration
- * @returns {Promise<object[] | string>}
+ * @param {ProcessedFile[]} results - array of results with file infomration
+ * @returns {Promise<ProcessedFile[] | string>}
  */
 const parseDirectoriesRecursively = async (paths = [], results = []) => {
   try {
@@ -40,6 +53,7 @@ const parseDirectoriesRecursively = async (paths = [], results = []) => {
       contents.map((item) => fs.stat(`${target}/${item}`)),
     );
 
+    /** @type {ProcessedFile[]}  */
     const files = [];
     const updatedDirectories = stats.reduce(
       async (array, item, i) => {
@@ -83,8 +97,8 @@ const parseDirectoriesRecursively = async (paths = [], results = []) => {
 
 /**
  * Add files
- * @param {ProcessedItems[]} items - processed items array
- * @returns {Promise<ProcessedItems[] | string>}
+ * @param {ProcessedFile[]} items - processed items array
+ * @returns {Promise<ProcessedFile[] | string>}
  */
 module.exports = async (items = []) => {
   try {

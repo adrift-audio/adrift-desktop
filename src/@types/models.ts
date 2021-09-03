@@ -2,6 +2,24 @@ export interface ExtendedFile extends File {
   path: string;
 }
 
+export interface Link {
+  id: string;
+  link: string;
+}
+
+export interface Path {
+  id: string;
+  path: string;
+}
+
+export interface ExtendedWindow extends Window {
+  electron: {
+    handleFileAdding: (array: ProcessedFile[]) => Promise<ProcessedFile[]>;
+    loadFile: (value: string) => Promise<Buffer>;
+    seedFiles: (array: Path[]) => Promise<Link[]>;
+  };
+}
+
 export interface ProcessedFile {
   added: number;
   duration: number | null;
@@ -11,11 +29,6 @@ export interface ProcessedFile {
   path: string;
   size: number;
   type: string;
-}
-
-export interface Link {
-  id: string;
-  link: string;
 }
 
 export enum Roles {

@@ -27,6 +27,7 @@ import encodeLink from '../../utilities/encode-link';
 import * as EventTypes from '../../@types/events';
 import {
   ExtendedFile,
+  ExtendedWindow,
   Link,
   ProcessedFile,
   User,
@@ -37,14 +38,14 @@ import log from '../../utilities/log';
 import useRefState from '../../hooks/use-ref-state';
 import './Home.scss';
 
-const global = window as any;
+const global: ExtendedWindow = window as any;
 
 function Home(): React.ReactElement {
   const [dragging, setDragging] = useState<boolean>(false);
   const [files, setFiles] = useState<ProcessedFile[]>([]);
   const [filesReady, setFilesReady] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
-  const [links, setLinks] = useState<Link[]>([]);
+  const [links, setLinks] = useRefState<Link[]>([]);
   const [settingsModal, setSettingsModal] = useState<boolean>(false);
   const [socketClient, setSocketClient] = useRefState<Socket>({} as Socket);
   const [token, setToken] = useState<string>('');
@@ -120,19 +121,17 @@ function Home(): React.ReactElement {
       const [track] = files.filter(
         (item: ProcessedFile): boolean => item.id === id,
       );
-      const [seededLink] = links.filter((item: Link): boolean => item.id === id);
-      console.log(seededLink);
-      let magnetLink = '';
+      console.log('got track', track);
+      const [seededLink] = links.current.filter((item: Link): boolean => item.id === id);
+      console.log('get link', seededLink, links.current);
+      let magnetLink = {} as Link;
       if (seededLink) {
-        magnetLink = seededLink.link;
+        magnetLink = { ...seededLink };
       } else {
-        magnetLink = await global.electron.seedFile(track.path);
-        setLinks((state: Link[]): Link[] => [
-          ...state,
-          {
-            id,
-            link: magnetLink,
-          } as Link,
+        [magnetLink] = await global.electron.seedFiles([{ id: track.id, path: track.path }]);
+        setLinks([
+          ...links.current,
+          magnetLink,
         ]);
       }
 
@@ -141,12 +140,31 @@ function Home(): React.ReactElement {
           SOCKET_EVENTS.SWITCH_TRACK,
           {
             issuer: CLIENT_TYPE,
-            link: encodeLink(magnetLink),
+            link: encodeLink(magnetLink.link),
             target: CLIENT_TYPES.mobile,
             track,
           },
         );
       }
+    },
+    [files, links],
+  );
+
+  const handleRemoveFile = useCallback(
+    async (payload: EventTypes.RemoveFilePayload): Promise<void | null> => {
+      const { id, target } = payload;
+      if (target !== CLIENT_TYPES.desktop) {
+        return null;
+      }
+
+      const updatedFiles = files.filter((file: ProcessedFile): boolean => file.id !== id);
+      const updatedLinks = links.current.filter((link: Link): boolean => link.id !== id);
+      setFiles(updatedFiles);
+      setLinks(updatedLinks);
+
+      // TODO: stop seeding if necessary
+
+      return storeData<ProcessedFile[]>(storeKeys.files, updatedFiles);
     },
     [files, links],
   );
@@ -180,11 +198,13 @@ function Home(): React.ReactElement {
 
       socketConnection.on(SOCKET_EVENTS.CLIENT_CONNECTED, handleClientConnection);
       socketConnection.on(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
+      socketConnection.on(SOCKET_EVENTS.REMOVE_FILE, handleRemoveFile);
 
       return () => {
         if (filesReady && socketConnection) {
           socketConnection.off(SOCKET_EVENTS.CLIENT_CONNECTED, handleClientConnection);
           socketConnection.off(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
+          socketConnection.off(SOCKET_EVENTS.REMOVE_FILE, handleRemoveFile);
           socketConnection.close();
         }
       };

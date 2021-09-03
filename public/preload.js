@@ -3,7 +3,22 @@ const { contextBridge } = require('electron');
 
 const addFiles = require('./node/add-files');
 const fileLoader = require('./node/file-loader');
-const { seedFile } = require('./node/torrent-services');
+const { seedFiles } = require('./node/torrent-services');
+
+/**
+ * @typedef {{ id: string; link: string }} Link
+ * @typedef {{ id: string; path: string }} Path;
+ * @typedef {{
+ *  added: number;
+ *  duration: number;
+ *  durationLoaded: boolean;
+ *  id: string;
+ *  name: string;
+ *  path: string;
+ *  size: number;
+ *  type: string;
+ * }} ProcessedFile
+ */
 
 process.once(
   'loaded',
@@ -13,8 +28,8 @@ process.once(
       {
         /**
          * Handle file adding
-         * @param {ProcessedFiles[]} items - dropped items
-         * @returns {Promise<object[] | string>}
+         * @param {ProcessedFile[]} items - added items
+         * @returns {Promise<ProcessedFile[] | string>}
          */
         async handleFileAdding(items = []) {
           if (!(Array.isArray(items) && items.length > 0)) {
@@ -31,12 +46,12 @@ process.once(
           return fileLoader(path);
         },
         /**
-         * Seed selected file
-         * @param {ProcessedFile} file - file object
-         * @returns {Promise<string | null>}
+         * Seed files
+         * @param {Path[]} files - files to seed
+         * @returns {Promise<Link[] | null>}
          */
-        async seedFile(file) {
-          return seedFile(file);
+        async seedFiles(files) {
+          return seedFiles(files);
         },
       },
     );

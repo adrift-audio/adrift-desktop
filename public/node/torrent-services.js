@@ -1,29 +1,41 @@
 const TorrentServer = require('./torrent-server');
 
 /**
- * Seed file
- * @param {string} path - path to the file
- * @returns {Promise<string | null>}
+* @typedef {{ id: string; link: string }} Link
+* @typedef {{ id: string; path: string }} Path;
  */
-const seedFile = async (path = '') => {
-  if (!path) {
-    return null;
+
+/**
+ * Seed files
+ * @param {Path[]} files - files to seed
+ * @returns {Promise<Link[] | null>}
+ */
+const seedFiles = async (files = []) => {
+  if (files.length === 0) {
+    return [];
   }
 
   try {
-    const seedingPromise = new Promise(
-      (resolve) => TorrentServer.seed(
-        path,
-        (seededTorrent) => resolve(seededTorrent.magnetURI),
+    const links = await Promise.all(
+      files.map(
+        (file) => new Promise(
+          (resolve) => TorrentServer.seed(
+            file.path,
+            (seededTorrent) => resolve(seededTorrent.magnetURI),
+          ),
+        ),
       ),
     );
-    const resolvedLink = await seedingPromise;
-    return resolvedLink;
-  } catch (error) {
-    return null;
+
+    return links.map((link, i) => ({
+      id: files[i].id,
+      link,
+    }));
+  } catch {
+    return [];
   }
 };
 
 module.exports = {
-  seedFile,
+  seedFiles,
 };
