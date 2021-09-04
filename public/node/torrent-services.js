@@ -2,7 +2,7 @@ const TorrentServer = require('./torrent-server');
 
 /**
 * @typedef {{ id: string; link: string }} Link
-* @typedef {{ id: string; path: string }} Path;
+* @typedef {{ id: string; path: string }} Path
  */
 
 /**

@@ -29,6 +29,7 @@ import {
   ExtendedFile,
   ExtendedWindow,
   Link,
+  Path,
   ProcessedFile,
   User,
 } from '../../@types/models';
@@ -84,6 +85,21 @@ function Home(): React.ReactElement {
     [],
   );
 
+  /**
+   * Make initial file seeding
+   * @param {ProcessedFile[]} loadedFiles - loaded files
+   * @returns {Promise<void>}
+   */
+  const seedFiles = async (loadedFiles: ProcessedFile[]): Promise<void> => {
+    const paths: Path[] = loadedFiles.map((file: ProcessedFile): Path => ({
+      id: file.id,
+      path: file.path,
+    }));
+    const initialLinks = await global.electron.seedFiles(paths);
+    console.log('links', initialLinks);
+    return setLinks(initialLinks);
+  };
+
   useEffect(
     (): void => {
       const sharedFiles = getData<ProcessedFile[]>('files');
@@ -91,6 +107,7 @@ function Home(): React.ReactElement {
         setFiles(sharedFiles);
       }
       setFilesReady(true);
+      seedFiles(sharedFiles as ProcessedFile[]);
     },
     [],
   );
@@ -121,9 +138,7 @@ function Home(): React.ReactElement {
       const [track] = files.filter(
         (item: ProcessedFile): boolean => item.id === id,
       );
-      console.log('got track', track);
       const [seededLink] = links.current.filter((item: Link): boolean => item.id === id);
-      console.log('get link', seededLink, links.current);
       let magnetLink = {} as Link;
       if (seededLink) {
         magnetLink = { ...seededLink };
