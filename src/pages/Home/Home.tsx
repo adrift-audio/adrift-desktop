@@ -106,8 +106,7 @@ function Home(): React.ReactElement {
       if (Array.isArray(sharedFiles) && sharedFiles.length > 0) {
         setFiles(sharedFiles);
       }
-      setFilesReady(true);
-      seedFiles(sharedFiles as ProcessedFile[]);
+      return setFilesReady(true);
     },
     [],
   );
@@ -186,6 +185,8 @@ function Home(): React.ReactElement {
 
   useEffect(
     () => {
+      seedFiles(files as ProcessedFile[]);
+
       const socketConnection = connect(token);
       socketConnection.on(
         SOCKET_EVENTS.CONNECT,
