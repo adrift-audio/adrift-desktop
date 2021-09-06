@@ -87,17 +87,24 @@ function Home(): React.ReactElement {
 
   /**
    * Make initial file seeding
-   * @param {ProcessedFile[]} loadedFiles - loaded files
+   * @param {ProcessedFile[]} list - loaded files
    * @returns {Promise<void>}
    */
-  const seedFiles = async (loadedFiles: ProcessedFile[]): Promise<void> => {
-    const paths: Path[] = loadedFiles.map((file: ProcessedFile): Path => ({
-      id: file.id,
-      path: file.path,
-    }));
-    const initialLinks = await global.electron.seedFiles(paths);
-    console.log('links', initialLinks);
-    return setLinks(initialLinks);
+  const seedFiles = async (paths: Path[], list: Link[] = []): Promise<void | null> => {
+    if (paths.length === 0) {
+      console.log('list', list, 'links', links.current);
+      setLinks(list);
+      return null;
+    }
+
+    console.log('total paths', paths.length);
+    const [current, ...rest] = paths;
+    const [link] = await global.electron.seedFiles([{ ...current }]);
+
+    const updatedList = [...list, link];
+    console.log('updlist', updatedList);
+    setLinks(updatedList);
+    return seedFiles(rest, updatedList);
   };
 
   useEffect(
@@ -185,7 +192,11 @@ function Home(): React.ReactElement {
 
   useEffect(
     () => {
-      seedFiles(files as ProcessedFile[]);
+      const paths: Path[] = files.map((file: ProcessedFile): Path => ({
+        id: file.id,
+        path: file.path,
+      }));
+      seedFiles(paths);
 
       const socketConnection = connect(token);
       socketConnection.on(
@@ -241,7 +252,12 @@ function Home(): React.ReactElement {
     withoutDuration: ProcessedFile[],
   ): Promise<void | null> => {
     if (withoutDuration.length === 0) {
-      return storeData<ProcessedFile[]>(storeKeys.files, fullList);
+      storeData<ProcessedFile[]>(storeKeys.files, fullList);
+      const paths: Path[] = files.map((file: ProcessedFile): Path => ({
+        id: file.id,
+        path: file.path,
+      }));
+      return seedFiles(paths);
     }
 
     const [item, ...rest] = withoutDuration;
