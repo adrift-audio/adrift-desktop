@@ -46,7 +46,11 @@
     "url": "git+https://github.com/adrift-audio/adrift-desktop"
   },
   "keywords": [
-    "Adrift"
+    "Adrift",
+    "Electron",
+    "Node",
+    "React",
+    "Typescript"
   ],
   "license": "MIT",
   "dependencies": {
