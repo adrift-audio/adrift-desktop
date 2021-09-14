@@ -29,7 +29,6 @@ import {
   ExtendedFile,
   ExtendedWindow,
   Link,
-  Path,
   ProcessedFile,
   User,
 } from '../../@types/models';
@@ -54,16 +53,24 @@ function Home(): React.ReactElement {
 
   const router = useHistory();
 
-  // get token & load user record
+  // mounting
   useEffect(
     (): void => {
-      const existingToken = getData<string>('token');
+      // get token
+      const existingToken = getData<string>(storeKeys.token);
       if (!existingToken) {
         router.replace(ROUTES.signIn);
       }
-
       setToken(String(existingToken));
 
+      // load files
+      const sharedFiles = getData<ProcessedFile[]>(storeKeys.files);
+      if (Array.isArray(sharedFiles) && sharedFiles.length > 0) {
+        setFiles(sharedFiles);
+      }
+      setFilesReady(true);
+
+      // get user info
       (async () => {
         try {
           const response = await axios({
@@ -81,39 +88,6 @@ function Home(): React.ReactElement {
           log(error);
         }
       })();
-    },
-    [],
-  );
-
-  /**
-   * Make initial file seeding
-   * @param {ProcessedFile[]} list - loaded files
-   * @returns {Promise<void>}
-   */
-  const seedFiles = async (paths: Path[], list: Link[] = []): Promise<void | null> => {
-    if (paths.length === 0) {
-      console.log('list', list, 'links', links.current);
-      setLinks(list);
-      return null;
-    }
-
-    console.log('total paths', paths.length);
-    const [current, ...rest] = paths;
-    const [link] = await global.electron.seedFiles([{ ...current }]);
-
-    const updatedList = [...list, link];
-    console.log('updlist', updatedList);
-    setLinks(updatedList);
-    return seedFiles(rest, updatedList);
-  };
-
-  useEffect(
-    (): void => {
-      const sharedFiles = getData<ProcessedFile[]>('files');
-      if (Array.isArray(sharedFiles) && sharedFiles.length > 0) {
-        setFiles(sharedFiles);
-      }
-      return setFilesReady(true);
     },
     [],
   );
@@ -191,13 +165,7 @@ function Home(): React.ReactElement {
   );
 
   useEffect(
-    () => {
-      const paths: Path[] = files.map((file: ProcessedFile): Path => ({
-        id: file.id,
-        path: file.path,
-      }));
-      seedFiles(paths);
-
+    (): (() => void) => {
       const socketConnection = connect(token);
       socketConnection.on(
         SOCKET_EVENTS.CONNECT,
@@ -219,7 +187,7 @@ function Home(): React.ReactElement {
             },
           );
 
-          return setSocketClient(socketConnection);
+          setSocketClient(socketConnection);
         },
       );
 
@@ -227,7 +195,7 @@ function Home(): React.ReactElement {
       socketConnection.on(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
       socketConnection.on(SOCKET_EVENTS.REMOVE_FILE, handleRemoveFile);
 
-      return () => {
+      return (): void => {
         if (filesReady && socketConnection) {
           socketConnection.off(SOCKET_EVENTS.CLIENT_CONNECTED, handleClientConnection);
           socketConnection.off(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
@@ -252,12 +220,7 @@ function Home(): React.ReactElement {
     withoutDuration: ProcessedFile[],
   ): Promise<void | null> => {
     if (withoutDuration.length === 0) {
-      storeData<ProcessedFile[]>(storeKeys.files, fullList);
-      const paths: Path[] = files.map((file: ProcessedFile): Path => ({
-        id: file.id,
-        path: file.path,
-      }));
-      return seedFiles(paths);
+      return storeData<ProcessedFile[]>(storeKeys.files, fullList);
     }
 
     const [item, ...rest] = withoutDuration;

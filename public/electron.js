@@ -1,10 +1,4 @@
 /* eslint-disable */
-// require('electron-reloader')(
-//   module,
-//   {
-//     watchRenderer: false,
-//   },
-// );
 const {
   app,
   BrowserWindow,
