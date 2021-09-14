@@ -31,6 +31,8 @@ export interface ProcessedFile {
   type: string;
 }
 
+export type PlaylistEntry = Omit<ProcessedFile, 'durationLoaded' | 'path'>;
+
 export enum Roles {
   admin = 'admin',
   user = 'user',

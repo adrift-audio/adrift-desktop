@@ -17,6 +17,7 @@ import {
 } from '../../constants';
 import combineLists from '../../utilities/combine-lists';
 import connect from '../../utilities/socket-connection';
+import createPlaylist from '../../utilities/create-playlist';
 import {
   deleteData,
   getData,
@@ -29,6 +30,7 @@ import {
   ExtendedFile,
   ExtendedWindow,
   Link,
+  PlaylistEntry,
   ProcessedFile,
   User,
 } from '../../@types/models';
@@ -92,17 +94,14 @@ function Home(): React.ReactElement {
     [],
   );
 
-  const handleClientConnection = ({ client }: EventTypes.ClientConnectionPayload): void => {
-    if (client === CLIENT_TYPES.mobile && socketClient?.current?.connected) {
-      const playlist = files.map((file) => ({
-        added: file.added,
-        duration: file.duration,
-        id: file.id,
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      }));
-      socketClient.current.emit(
+  const handleClientConnection = useCallback(
+    ({ client }: EventTypes.ClientConnectionPayload): null | Socket => {
+      if (!(client === CLIENT_TYPES.mobile && socketClient?.current?.connected)) {
+        return null;
+      }
+
+      const playlist: PlaylistEntry[] = createPlaylist(files);
+      return socketClient.current.emit(
         SOCKET_EVENTS.AVAILABLE_PLAYLIST,
         {
           issuer: CLIENT_TYPE,
@@ -110,34 +109,72 @@ function Home(): React.ReactElement {
           target: CLIENT_TYPES.mobile,
         },
       );
-    }
-  };
+    },
+    [files],
+  );
 
   const handlePlayNext = useCallback(
-    async ({ id }: EventTypes.PlayNextPayload): Promise<void> => {
+    async ({ id, issuer, target }: EventTypes.PlayNextPayload): Promise<null | Socket> => {
+      if (!(socketClient?.current?.connected && issuer === CLIENT_TYPES.mobile
+        && target === CLIENT_TYPES.desktop)) {
+        return null;
+      }
+
+      if (!id) {
+        return socketClient.current.emit(
+          SOCKET_EVENTS.ERROR,
+          {
+            error: 'MISSING_TRACK_ID',
+            issuer: CLIENT_TYPE,
+            target: CLIENT_TYPES.mobile,
+          },
+        );
+      }
+
       const [track] = files.filter(
         (item: ProcessedFile): boolean => item.id === id,
       );
       const [seededLink] = links.current.filter((item: Link): boolean => item.id === id);
       let magnetLink = {} as Link;
-      if (seededLink) {
-        magnetLink = { ...seededLink };
-      } else {
-        [magnetLink] = await global.electron.seedFiles([{ id: track.id, path: track.path }]);
-        setLinks([
-          ...links.current,
-          magnetLink,
-        ]);
-      }
 
-      if (socketClient?.current?.connected) {
-        socketClient.current.emit(
+      try {
+        if (seededLink) {
+          magnetLink = { ...seededLink };
+        } else {
+          if (!track) {
+            return socketClient.current.emit(
+              SOCKET_EVENTS.ERROR,
+              {
+                error: 'INVALID_TRACK_ID',
+                issuer: CLIENT_TYPE,
+                target: CLIENT_TYPES.mobile,
+              },
+            );
+          }
+
+          [magnetLink] = await global.electron.seedFiles([{ id: track.id, path: track.path }]);
+          setLinks([
+            ...links.current,
+            magnetLink,
+          ]);
+        }
+
+        return socketClient.current.emit(
           SOCKET_EVENTS.SWITCH_TRACK,
           {
             issuer: CLIENT_TYPE,
             link: encodeLink(magnetLink.link),
             target: CLIENT_TYPES.mobile,
             track,
+          },
+        );
+      } catch {
+        return socketClient.current.emit(
+          SOCKET_EVENTS.ERROR,
+          {
+            error: 'INTERNAL_DESKTOP_ERROR',
+            issuer: CLIENT_TYPE,
+            target: CLIENT_TYPES.mobile,
           },
         );
       }
@@ -170,14 +207,7 @@ function Home(): React.ReactElement {
       socketConnection.on(
         SOCKET_EVENTS.CONNECT,
         (): void => {
-          const playlist = files.map((file) => ({
-            added: file.added,
-            duration: file.duration,
-            id: file.id,
-            name: file.name,
-            size: file.size,
-            type: file.type,
-          }));
+          const playlist: PlaylistEntry[] = createPlaylist(files);
           socketConnection.emit(
             SOCKET_EVENTS.AVAILABLE_PLAYLIST,
             {
@@ -212,7 +242,7 @@ function Home(): React.ReactElement {
   /**
    * Calculate durations of the tracks
    * @param {ProcessedFile[]} fullList - list of all of the processed files
-   * @param {ProcessedFile[]} withoutDuration - list of the items that were not processed yet
+   * @param {ProcessedFile[]} withoutDuration - list of the items that were not fully processed yet
    * @returns {Promise<void | null>}
    */
   const calculateDurations = async (
@@ -220,6 +250,17 @@ function Home(): React.ReactElement {
     withoutDuration: ProcessedFile[],
   ): Promise<void | null> => {
     if (withoutDuration.length === 0) {
+      if (socketClient?.current?.connected) {
+        const playlist: PlaylistEntry[] = createPlaylist(fullList);
+        socketClient.current.emit(
+          SOCKET_EVENTS.AVAILABLE_PLAYLIST,
+          {
+            issuer: CLIENT_TYPE,
+            playlist,
+            target: CLIENT_TYPES.mobile,
+          },
+        );
+      }
       return storeData<ProcessedFile[]>(storeKeys.files, fullList);
     }
 
@@ -281,12 +322,28 @@ function Home(): React.ReactElement {
     return router.replace(ROUTES.signIn);
   };
 
-  const handleRemoveAll = (): void => {
-    // TODO: properly remove all seeded files, disable seeding, notify the room
-    deleteData(storeKeys.files);
-    setFiles([]);
-    return setSettingsModal(false);
-  };
+  /**
+   * Remove all seeded items
+   */
+  const handleRemoveAll = useCallback(
+    (): void => {
+      // TODO: disable seeding, notify the room
+      deleteData(storeKeys.files);
+      setFiles([]);
+      setLinks([]);
+      if (socketClient?.current?.connected) {
+        socketClient.current.emit(
+          SOCKET_EVENTS.REMOVE_ALL,
+          {
+            issuer: CLIENT_TYPE,
+            target: CLIENT_TYPES.mobile,
+          },
+        );
+      }
+      return setSettingsModal(false);
+    },
+    [files, links],
+  );
 
   return (
     <HomeLayout
