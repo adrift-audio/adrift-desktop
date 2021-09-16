@@ -201,40 +201,57 @@ function Home(): React.ReactElement {
     [files, links],
   );
 
+  // handle socket connection
   useEffect(
     (): (() => void) => {
-      const socketConnection = connect(token);
-      socketConnection.on(
-        SOCKET_EVENTS.CONNECT,
-        (): void => {
-          const playlist: PlaylistEntry[] = createPlaylist(files);
-          socketConnection.emit(
-            SOCKET_EVENTS.AVAILABLE_PLAYLIST,
-            {
-              issuer: CLIENT_TYPE,
-              playlist,
-              target: CLIENT_TYPES.mobile,
-            },
-          );
-
-          setSocketClient(socketConnection);
-        },
-      );
-
-      socketConnection.on(SOCKET_EVENTS.CLIENT_CONNECTED, handleClientConnection);
-      socketConnection.on(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
-      socketConnection.on(SOCKET_EVENTS.REMOVE_FILE, handleRemoveFile);
+      const socketConnection: Socket = connect(token);
+      setSocketClient(socketConnection);
 
       return (): void => {
-        if (filesReady && socketConnection) {
-          socketConnection.off(SOCKET_EVENTS.CLIENT_CONNECTED, handleClientConnection);
-          socketConnection.off(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
-          socketConnection.off(SOCKET_EVENTS.REMOVE_FILE, handleRemoveFile);
-          socketConnection.close();
-        }
+        socketConnection.close();
+        setSocketClient({} as Socket);
       };
     },
     [filesReady],
+  );
+
+  // handle socket events
+  useEffect(
+    (): (() => void) => {
+      if (socketClient.current.connected) {
+        socketClient.current.on(
+          SOCKET_EVENTS.CONNECT,
+          (): void => {
+            const playlist: PlaylistEntry[] = createPlaylist(files);
+            socketClient.current.emit(
+              SOCKET_EVENTS.AVAILABLE_PLAYLIST,
+              {
+                issuer: CLIENT_TYPE,
+                playlist,
+                target: CLIENT_TYPES.mobile,
+              },
+            );
+          },
+        );
+
+        socketClient.current.on(SOCKET_EVENTS.CLIENT_CONNECTED, handleClientConnection);
+        socketClient.current.on(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
+        socketClient.current.on(SOCKET_EVENTS.REMOVE_FILE, handleRemoveFile);
+      }
+
+      return (): void => {
+        if (socketClient.current.connected) {
+          socketClient.current.off(SOCKET_EVENTS.CLIENT_CONNECTED, handleClientConnection);
+          socketClient.current.off(SOCKET_EVENTS.PLAY_NEXT, handlePlayNext);
+          socketClient.current.off(SOCKET_EVENTS.REMOVE_FILE, handleRemoveFile);
+        }
+      };
+    },
+    [
+      files,
+      links,
+      socketClient.current,
+    ],
   );
 
   const handleContextClick = (id: string): void => log(`clicked ${id}`);
@@ -317,7 +334,8 @@ function Home(): React.ReactElement {
 
   const handleLogout = (): void => {
     // TODO: properly log out, disable seeding, close socket connection, notify the room
-    deleteData(storeKeys.token);
+    [storeKeys.token, storeKeys.user].forEach((key) => deleteData(key));
+    socketClient.current.close();
     setSettingsModal(false);
     return router.replace(ROUTES.signIn);
   };
