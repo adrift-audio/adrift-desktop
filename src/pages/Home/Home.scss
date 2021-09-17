@@ -84,3 +84,14 @@
     width: calc(var(--spacer) + var(--spacer-quarter));
   }
 }
+.details {
+  background-color: var(--app-background);
+  border-radius: var(--spacer-half);
+  box-shadow: 0 0 var(--spacer) 0 var(--accent5);
+  padding: var(--spacer);
+  height: 200px;
+  width: 400px;
+  .header {
+    font-size: calc(var(--spacer) + var(--spacer-quarter));
+  }
+}

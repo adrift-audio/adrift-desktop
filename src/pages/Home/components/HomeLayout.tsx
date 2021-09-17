@@ -2,19 +2,24 @@ import React, { memo } from 'react';
 
 import Cog from '../../../assets/cog.svg';
 import DarkWave from '../../../assets/wave-dark.svg';
+import DetailsModal from './DetailsModal';
 import DropZone from './DropZone';
 import { ProcessedFile, User } from '../../../@types/models';
 import SettingsModal from './SettingsModal';
+import '../Home.scss';
 
 interface HomeLayoutProps {
+  detailsModal: boolean;
   dragging: boolean;
   files: ProcessedFile[];
   handleContextClick: (id: string) => void;
+  handleDetailsModal: () => void;
   handleDrop: (event: React.DragEvent<HTMLDivElement>) => Promise<void | null>;
   handleLogout: () => void;
   handleRemoveAll: () => void;
   handleSettingsModal: () => void;
   loading: boolean;
+  selectedTrack: ProcessedFile;
   setDragging: (value: boolean) => void;
   settingsModal: boolean;
   user: User | null;
@@ -22,14 +27,17 @@ interface HomeLayoutProps {
 
 function HomeLayout(props: HomeLayoutProps): React.ReactElement {
   const {
+    detailsModal,
     dragging,
     files,
     handleContextClick,
+    handleDetailsModal,
     handleDrop,
     handleLogout,
     handleRemoveAll,
     handleSettingsModal,
     loading,
+    selectedTrack,
     setDragging,
     settingsModal,
     user,
@@ -37,6 +45,12 @@ function HomeLayout(props: HomeLayoutProps): React.ReactElement {
 
   return (
     <div className="flex direction-column home fade-in">
+      { detailsModal && (
+        <DetailsModal
+          handleCloseModal={handleDetailsModal}
+          track={selectedTrack}
+        />
+      ) }
       { settingsModal && (
         <SettingsModal
           handleLogout={handleLogout}

@@ -43,11 +43,13 @@ import './Home.scss';
 const global: ExtendedWindow = window as any;
 
 function Home(): React.ReactElement {
+  const [detailsModal, setDetailsModal] = useState<boolean>(false);
   const [dragging, setDragging] = useState<boolean>(false);
   const [files, setFiles] = useState<ProcessedFile[]>([]);
   const [filesReady, setFilesReady] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [links, setLinks] = useRefState<Link[]>([]);
+  const [selectedTrack, setSelectedTrack] = useState<ProcessedFile>({} as ProcessedFile);
   const [settingsModal, setSettingsModal] = useState<boolean>(false);
   const [socketClient, setSocketClient] = useRefState<Socket>({} as Socket);
   const [token, setToken] = useState<string>('');
@@ -254,7 +256,12 @@ function Home(): React.ReactElement {
     ],
   );
 
-  const handleContextClick = (id: string): void => log(`clicked ${id}`);
+  const handleContextClick = (id: string): void => {
+    log(`clicked ${id}`);
+    const [selected] = files.filter((track: ProcessedFile): boolean => track.id === id);
+    setSelectedTrack(selected);
+    return setDetailsModal(true);
+  };
 
   /**
    * Calculate durations of the tracks
@@ -363,16 +370,21 @@ function Home(): React.ReactElement {
     [files, links],
   );
 
+  const handleDetailsModal = () => setDetailsModal((state) => !state);
+
   return (
     <HomeLayout
+      detailsModal={detailsModal}
       dragging={dragging}
       files={files}
       handleContextClick={handleContextClick}
+      handleDetailsModal={handleDetailsModal}
       handleDrop={handleDrop}
       handleLogout={handleLogout}
       handleRemoveAll={handleRemoveAll}
       handleSettingsModal={handleSettingsModal}
       loading={loading}
+      selectedTrack={selectedTrack}
       setDragging={setDragging}
       settingsModal={settingsModal}
       user={user || null}
